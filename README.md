@@ -32,5 +32,11 @@ The current Phase 1 configurations are:
 - `configs/experiments/reproduction/warmstart_dual.yaml`
 - `configs/experiments/modern/deberta_dora_e5_transformer.yaml`
 
-Training, data validation, and evaluation entry points are added in later
-phases. Do not use the test split for model selection or debugging.
+Validate local DAIC-WOZ partition files before training:
+
+```bash
+uv run python scripts/validate_data.py --config configs/experiments/reproduction/warmstart_dual.yaml
+```
+
+Training and evaluation entry points are added in later phases. Do not use the
+test split for model selection or debugging.

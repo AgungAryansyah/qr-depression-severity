@@ -5,7 +5,10 @@ experiment:
 data:
   dataset: daic_woz
   root: data
-  split_file: data/splits/official.json
+  split_file: configs/data/official_daic_woz.json
+  preprocessing:
+    lowercase: true
+    normalize_whitespace: true
   max_qr_pairs: 128
 model:
   {}

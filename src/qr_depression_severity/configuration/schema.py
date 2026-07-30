@@ -20,7 +20,15 @@ class DataSettings(StrictModel):
     dataset: Literal["daic_woz"]
     root: Path
     split_file: Path
+    preprocessing: "PreprocessingSettings" = Field(
+        default_factory=lambda: PreprocessingSettings()
+    )
     max_qr_pairs: int = Field(default=128, ge=1)
+
+
+class PreprocessingSettings(StrictModel):
+    lowercase: bool = True
+    normalize_whitespace: bool = True
 
 
 class AdaptedEncoderSettings(StrictModel):
