@@ -1,0 +1,22 @@
+experiment:
+  name: base
+  output_dir: outputs
+  tags: []
+data:
+  dataset: daic_woz
+  root: data
+  split_file: data/splits/official.json
+  max_qr_pairs: 128
+model:
+  {}
+training:
+  seed: 0
+  max_epochs: 100
+  batch_size: 1
+  gradient_accumulation_steps: 1
+  precision: bf16
+evaluation:
+  metrics: [rmse, mae, accuracy, macro_f1, quadratic_weighted_kappa]
+tracking:
+  backend: disabled
+  mode: disabled

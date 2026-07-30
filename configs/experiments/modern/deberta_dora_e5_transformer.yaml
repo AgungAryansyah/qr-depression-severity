@@ -1,0 +1,41 @@
+extends: ../../base.yaml
+experiment:
+  name: modern-dora-e5-transformer
+  tags: [modern, dora, e5, transformer]
+model:
+  adapted_encoder:
+    name: microsoft/deberta-v3-base
+    method: dora
+    revision: null
+    rank: 8
+    alpha: 16
+    dropout: 0.1
+  semantic_encoder:
+    name: intfloat/e5-base-v2
+    revision: null
+    frozen: true
+  qr_fusion:
+    mode: feature_interaction
+  branch_fusion:
+    mode: vector_gate
+    dropout: 0.1
+  interview_encoder:
+    name: transformer
+    layers: 2
+    hidden_size: 256
+  heads:
+    regression_loss: huber
+    huber_delta: 2.0
+    ordinal_loss: corn
+    ordinal_loss_weight: 0.5
+training:
+  max_epochs: 1
+  batch_size: 1
+  precision: bf16
+  optimizer:
+    name: adamw
+  scheduler:
+    name: linear
+  early_stopping:
+    monitor: dev_rmse
+    patience: 1

@@ -1,0 +1,29 @@
+extends: ../../base.yaml
+experiment:
+  name: reproduction-warmstart-dual
+  tags: [reproduction, warmstart]
+model:
+  adapted_encoder:
+    name: roberta-base
+    method: prefix
+  semantic_encoder:
+    enabled: true
+  qr_fusion:
+    mode: legacy
+  branch_fusion:
+    mode: average
+  interview_encoder:
+    name: bilstm_attention
+  heads:
+    regression_loss: mse
+training:
+  max_epochs: 100
+  batch_size: 1
+  precision: bf16
+  optimizer:
+    name: adamw
+  scheduler:
+    name: linear
+  early_stopping:
+    monitor: dev_rmse
+    patience: 15
