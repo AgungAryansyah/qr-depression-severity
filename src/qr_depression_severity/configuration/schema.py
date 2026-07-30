@@ -38,6 +38,8 @@ class AdaptedEncoderSettings(StrictModel):
     rank: int | None = Field(default=None, ge=1)
     alpha: int | None = Field(default=None, ge=1)
     dropout: float | None = Field(default=None, ge=0, le=1)
+    prefix_length: int | None = Field(default=None, ge=1)
+    pooling: Literal["masked_mean"] | None = None
 
 
 class SemanticEncoderSettings(StrictModel):
@@ -45,6 +47,7 @@ class SemanticEncoderSettings(StrictModel):
     revision: str | None = None
     enabled: bool | None = None
     frozen: bool | None = None
+    pooling: Literal["masked_mean"] | None = None
 
 
 class QrFusionSettings(StrictModel):
@@ -60,6 +63,7 @@ class InterviewEncoderSettings(StrictModel):
     name: str
     layers: int | None = Field(default=None, ge=1)
     hidden_size: int | None = Field(default=None, ge=1)
+    attention: bool | None = None
 
 
 class HeadSettings(StrictModel):

@@ -6,14 +6,21 @@ model:
   adapted_encoder:
     name: roberta-base
     method: prefix
+    revision: null
+    prefix_length: 10
+    pooling: masked_mean
   semantic_encoder:
-    enabled: true
+    name: sentence-transformers/all-mpnet-base-v2
+    revision: null
+    frozen: true
+    pooling: masked_mean
   qr_fusion:
     mode: legacy
   branch_fusion:
     mode: average
   interview_encoder:
     name: bilstm_attention
+    attention: true
   heads:
     regression_loss: mse
 training:
