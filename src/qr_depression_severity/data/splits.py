@@ -7,7 +7,6 @@ from pathlib import Path
 
 from qr_depression_severity.configuration.schema import DataSettings
 
-
 EXPECTED_SPLIT_COUNTS = {"train": 107, "dev": 35, "test": 47}
 SPLIT_FILENAMES = {
     "train": "train_split_Depression_AVEC2017.csv",
@@ -42,7 +41,8 @@ def _load_manifest(path: Path) -> dict[str, list[int]]:
         with path.open(encoding="utf-8") as stream:
             manifest = json.load(stream)
     except FileNotFoundError as error:
-        raise FileNotFoundError(f"Official split manifest is missing: {path}") from error
+        message = f"Official split manifest is missing: {path}"
+        raise FileNotFoundError(message) from error
     if not isinstance(manifest, dict):
         raise ValueError(f"Official split manifest must be an object: {path}")
     return manifest
@@ -62,7 +62,9 @@ def _validate_manifest(manifest: dict[str, list[int]]) -> None:
             raise ValueError(f"{split} split must contain {expected_count} subjects")
         overlap = all_ids.intersection(participant_ids)
         if overlap:
-            raise ValueError(f"Participant overlap across official splits: {sorted(overlap)}")
+            raise ValueError(
+                f"Participant overlap across official splits: {sorted(overlap)}"
+            )
         all_ids.update(participant_ids)
 
 
@@ -84,10 +86,13 @@ def _read_participant_ids(path: Path) -> list[int]:
                 raise ValueError(f"Split file lacks participant ID column: {path}")
             return [int(row[column]) for row in reader]
     except FileNotFoundError as error:
-        raise FileNotFoundError(f"Official {path.stem} file is missing: {path}") from error
+        message = f"Official {path.stem} file is missing: {path}"
+        raise FileNotFoundError(message) from error
 
 
-def _validate_required_files(root: Path, split: str, participant_ids: list[int]) -> None:
+def _validate_required_files(
+    root: Path, split: str, participant_ids: list[int]
+) -> None:
     missing = [
         participant_id
         for participant_id in participant_ids
