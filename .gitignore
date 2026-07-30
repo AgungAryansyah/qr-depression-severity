@@ -101,13 +101,13 @@ ipython_config.py
 # uv.lock
 
 # Research data and generated artifacts
-data/
-outputs/
-artifacts/
-checkpoints/
-cache/
-wandb/
-wandb-offline/
+/data/
+/outputs/
+/artifacts/
+/checkpoints/
+/cache/
+/wandb/
+/wandb-offline/
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
