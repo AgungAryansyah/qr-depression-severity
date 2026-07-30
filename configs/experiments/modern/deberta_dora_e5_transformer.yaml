@@ -6,14 +6,14 @@ model:
   adapted_encoder:
     name: microsoft/deberta-v3-base
     method: dora
-    revision: null
+    revision: e4647970a4c145e8a616c83caeaec8493e8aaf17
     rank: 8
     alpha: 16
     dropout: 0.1
     pooling: masked_mean
   semantic_encoder:
     name: intfloat/e5-base-v2
-    revision: null
+    revision: f52bf8ec8c7124536f0efb74aca902b2995e5bcd
     frozen: true
     pooling: masked_mean
     normalize: true
