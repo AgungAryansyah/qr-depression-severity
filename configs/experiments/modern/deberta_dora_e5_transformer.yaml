@@ -10,24 +10,35 @@ model:
     rank: 8
     alpha: 16
     dropout: 0.1
+    pooling: masked_mean
   semantic_encoder:
     name: intfloat/e5-base-v2
     revision: null
     frozen: true
+    pooling: masked_mean
+    normalize: true
   qr_fusion:
     mode: feature_interaction
+    hidden_size: 256
+    dropout: 0.1
   branch_fusion:
     mode: vector_gate
     dropout: 0.1
+    branch_dropout: 0.1
   interview_encoder:
     name: transformer
     layers: 2
     hidden_size: 256
+    heads: 4
+    feedforward_size: 512
+    dropout: 0.2
+    pooling: attention
   heads:
     regression_loss: huber
     huber_delta: 2.0
     ordinal_loss: corn
     ordinal_loss_weight: 0.5
+    dropout: 0.2
 training:
   max_epochs: 1
   batch_size: 1

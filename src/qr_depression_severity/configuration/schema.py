@@ -39,7 +39,8 @@ class AdaptedEncoderSettings(StrictModel):
     alpha: int | None = Field(default=None, ge=1)
     dropout: float | None = Field(default=None, ge=0, le=1)
     prefix_length: int | None = Field(default=None, ge=1)
-    pooling: Literal["masked_mean"] | None = None
+    pooling: Literal["masked_mean", "cls", "attention"] | None = None
+    target_modules: tuple[str, ...] | None = None
 
 
 class SemanticEncoderSettings(StrictModel):
@@ -47,16 +48,21 @@ class SemanticEncoderSettings(StrictModel):
     revision: str | None = None
     enabled: bool | None = None
     frozen: bool | None = None
-    pooling: Literal["masked_mean"] | None = None
+    pooling: Literal["masked_mean", "cls", "attention"] | None = None
+    normalize: bool | None = None
 
 
 class QrFusionSettings(StrictModel):
     mode: str
+    hidden_size: int | None = Field(default=None, ge=1)
+    dropout: float | None = Field(default=None, ge=0, le=1)
+    heads: int | None = Field(default=None, ge=1)
 
 
 class BranchFusionSettings(StrictModel):
     mode: str
     dropout: float | None = Field(default=None, ge=0, le=1)
+    branch_dropout: float | None = Field(default=None, ge=0, le=1)
 
 
 class InterviewEncoderSettings(StrictModel):
@@ -64,6 +70,10 @@ class InterviewEncoderSettings(StrictModel):
     layers: int | None = Field(default=None, ge=1)
     hidden_size: int | None = Field(default=None, ge=1)
     attention: bool | None = None
+    heads: int | None = Field(default=None, ge=1)
+    feedforward_size: int | None = Field(default=None, ge=1)
+    dropout: float | None = Field(default=None, ge=0, le=1)
+    pooling: Literal["attention", "cls", "mean"] | None = None
 
 
 class HeadSettings(StrictModel):
@@ -71,6 +81,7 @@ class HeadSettings(StrictModel):
     huber_delta: float | None = Field(default=None, gt=0)
     ordinal_loss: str | None = None
     ordinal_loss_weight: float | None = Field(default=None, ge=0)
+    dropout: float | None = Field(default=None, ge=0, le=1)
 
 
 class ModelSettings(StrictModel):
