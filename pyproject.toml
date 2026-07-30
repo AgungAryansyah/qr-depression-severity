@@ -1,0 +1,35 @@
+[project]
+name = "qr-depression-severity"
+version = "0.1.0"
+description = "Reproducible QR-based PHQ-8 depression severity research"
+readme = "README.md"
+authors = [
+    { name = "AgungAryansyah", email = "agungaryansyah2006@gmail.com" }
+]
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "ruff>=0.15.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[project.scripts]
+qr-depression-severity = "qr_depression_severity:main"
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
