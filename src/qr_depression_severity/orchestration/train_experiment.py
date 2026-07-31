@@ -110,6 +110,8 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
             precision,
             config.training.gradient_accumulation_steps,
             scheduler,
+            config.tracking.console,
+            config.tracking.console_every_n_batches,
         )
         return _train_epochs(
             config, trainer, model, optimizer, train_loader, dev_loader, run_dir
@@ -155,8 +157,12 @@ def _train_epochs(
     checkpoint = run_dir / "best_checkpoint.pt"
     step = 0
     for epoch in range(1, config.training.max_epochs + 1):
+        if config.tracking.console:
+            print(f"Epoch {epoch}/{config.training.max_epochs}: train", flush=True)
         train_metrics = trainer.run_epoch(train_loader, True, step)
         step += len(train_loader)
+        if config.tracking.console:
+            print(f"Epoch {epoch}/{config.training.max_epochs}: dev", flush=True)
         dev_metrics = trainer.run_epoch(dev_loader, False, step)
         epoch_metrics = {
             "epoch": epoch,
@@ -172,6 +178,13 @@ def _train_epochs(
             step,
         )
         history.append(epoch_metrics)
+        if config.tracking.console:
+            print(
+                f"Epoch {epoch}/{config.training.max_epochs}: "
+                f"train_rmse={train_metrics['rmse']:.4f} "
+                f"dev_rmse={dev_metrics['rmse']:.4f}",
+                flush=True,
+            )
         if (
             best_metrics is None
             or dev_metrics["rmse"] < best_metrics["rmse"] - early_stopping.min_delta

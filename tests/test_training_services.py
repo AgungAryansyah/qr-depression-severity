@@ -36,14 +36,16 @@ def test_severity_boundaries_and_combined_loss() -> None:
     assert set(parts) == {"regression", "ordinal"}
 
 
-def test_trainer_checkpoint_and_local_history(tmp_path: Path) -> None:
+def test_trainer_checkpoint_and_local_history(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     config = load_experiment_config(
         Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
     )
     model = _ToyModel()
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
     tracker = LocalTracker(tmp_path)
-    trainer = Trainer(model, optimizer, tracker, "huber", 2.0, 0.5, 1.0)
+    trainer = Trainer(model, optimizer, tracker, "huber", 2.0, 0.5, 1.0, console=True)
     batch = {"features": torch.ones(2, 1), "target": torch.tensor([1.0, 8.0])}
 
     metrics = trainer.run_epoch([batch], training=True, step=0)
@@ -62,6 +64,7 @@ def test_trainer_checkpoint_and_local_history(tmp_path: Path) -> None:
         "quadratic_weighted_kappa",
     }
     assert (tmp_path / "tracker_events.json").is_file()
+    assert "train batch 1/1" in capsys.readouterr().out
 
 
 def test_checkpoint_rejects_an_incompatible_config(tmp_path: Path) -> None:

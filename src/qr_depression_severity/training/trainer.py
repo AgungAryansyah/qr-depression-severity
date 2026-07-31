@@ -25,6 +25,8 @@ class Trainer:
         precision: torch.dtype = torch.float32,
         gradient_accumulation_steps: int = 1,
         scheduler: torch.optim.lr_scheduler.LRScheduler | None = None,
+        console: bool = False,
+        console_every_n_batches: int = 1,
     ) -> None:
         self.model = model
         self.optimizer = optimizer
@@ -37,6 +39,8 @@ class Trainer:
         self.precision = precision
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.scheduler = scheduler
+        self.console = console
+        self.console_every_n_batches = console_every_n_batches
         self.scaler = (
             torch.amp.GradScaler("cuda") if precision == torch.float16 else None
         )
@@ -49,6 +53,7 @@ class Trainer:
         targets: list[Tensor] = []
         total_loss = 0.0
         batch_count = 0
+        total_batches = len(batches) if hasattr(batches, "__len__") else None
         accumulated = 0
         for batch in batches:
             batch = {name: value.to(self.device) for name, value in batch.items()}
@@ -88,6 +93,13 @@ class Trainer:
                 },
                 step + batch_count,
             )
+            if self.console and batch_count % self.console_every_n_batches == 0:
+                total = str(total_batches) if total_batches is not None else "?"
+                phase = "train" if training else "dev"
+                print(
+                    f"{phase} batch {batch_count}/{total} loss={loss.item():.4f}",
+                    flush=True,
+                )
         if training and accumulated:
             self._optimizer_step()
         if not batch_count:

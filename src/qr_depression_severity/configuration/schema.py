@@ -161,6 +161,8 @@ class TrackingSettings(StrictModel):
     log_predictions: bool = True
     log_attention: bool = False
     watch_model: bool = False
+    console: bool = False
+    console_every_n_batches: int = Field(default=1, ge=1)
 
 
 class ExperimentConfig(StrictModel):
