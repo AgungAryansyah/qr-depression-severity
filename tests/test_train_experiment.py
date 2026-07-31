@@ -49,6 +49,8 @@ def test_train_experiment_writes_a_best_checkpoint(monkeypatch, tmp_path: Path) 
     assert (result.run_dir / "config.resolved.yaml").is_file()
     assert (result.run_dir / "train_history.json").is_file()
     assert (result.run_dir / "metrics.json").is_file()
+    assert (result.run_dir / "trainable_parameters.txt").is_file()
+    assert (result.run_dir / "wandb_run.json").is_file()
 
 
 def _interviews(settings: object, split: str) -> list[InterviewExample]:

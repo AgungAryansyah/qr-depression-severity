@@ -17,7 +17,9 @@ from qr_depression_severity.tracking import build_tracker
 from qr_depression_severity.training.artifacts import (
     initialize_run_artifacts,
     write_metrics,
+    write_tracking_metadata,
     write_train_history,
+    write_trainable_parameters,
 )
 from qr_depression_severity.training.checkpointing import (
     load_checkpoint,
@@ -55,11 +57,19 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
                 config.model.semantic_encoder, "semantic_encoder"
             ).name,
             "device": str(device),
+            "adapted_revision": _require(
+                config.model.adapted_encoder, "adapted_encoder"
+            ).revision,
+            "semantic_revision": _require(
+                config.model.semantic_encoder, "semantic_encoder"
+            ).revision,
         },
     )
     tracker = build_tracker(config.tracking, run_dir, config.model_dump(mode="json"))
+    write_tracking_metadata(run_dir, tracker.run_metadata())
     try:
         model = build_modern_model(config).to(device)
+        write_trainable_parameters(run_dir, model)
         adapted_tokenizer, semantic_tokenizer = build_tokenizers(config)
         collator = ModernQrCollator(
             adapted_tokenizer,

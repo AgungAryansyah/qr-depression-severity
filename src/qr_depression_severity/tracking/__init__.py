@@ -1,5 +1,6 @@
 """Tracking adapter selection."""
 
+import warnings
 from pathlib import Path
 
 from qr_depression_severity.configuration.schema import TrackingSettings
@@ -15,7 +16,15 @@ def build_tracker(
         return DisabledTracker()
     if settings.backend == "local":
         return LocalTracker(run_dir)
-    return WandbTracker(settings, config)
+    try:
+        return WandbTracker(settings, config)
+    except Exception as error:
+        warnings.warn(
+            f"W&B initialization failed; continuing with local artifacts: {error}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return LocalTracker(run_dir, fallback_reason=type(error).__name__)
 
 
 __all__ = ["ExperimentTracker", "build_tracker"]

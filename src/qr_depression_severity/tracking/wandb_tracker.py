@@ -28,5 +28,12 @@ class WandbTracker:
         artifact.add_file(str(path))
         self.run.log_artifact(artifact)
 
+    def run_metadata(self) -> dict[str, str | None]:
+        return {
+            "backend": "wandb",
+            "id": self.run.id,
+            "url": self.run.url,
+        }
+
     def finish(self) -> None:
         self.run.finish()
