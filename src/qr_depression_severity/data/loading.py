@@ -1,6 +1,7 @@
 """DAIC-WOZ interview and label loading."""
 
 import csv
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -37,7 +38,12 @@ def load_interviews(settings: DataSettings, split: str) -> list[InterviewExample
             settings.preprocessing,
         )
         if not pairs:
-            raise ValueError(f"Interview has no valid QR pairs: {participant_id}")
+            warnings.warn(
+                f"Skipping participant {participant_id}: no valid QR pairs",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            continue
         interviews.append(
             InterviewExample(participant_id, scores[participant_id], tuple(pairs))
         )

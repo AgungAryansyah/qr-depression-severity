@@ -1,10 +1,14 @@
 from pathlib import Path
 
+import pytest
 import torch
 
+from qr_depression_severity.configuration.schema import DataSettings
+from qr_depression_severity.data import loading as loading_module
 from qr_depression_severity.data.collators import ModernQrCollator
 from qr_depression_severity.data.loading import InterviewExample, _read_transcript
-from qr_depression_severity.data.qr_pairing import QrPair
+from qr_depression_severity.data.qr_pairing import QrPair, TranscriptTurn
+from qr_depression_severity.data.splits import ValidatedSplits
 
 
 def test_collator_keeps_question_and_response_branches_separate() -> None:
@@ -54,6 +58,34 @@ def test_transcript_reader_preserves_turn_metadata(tmp_path: Path) -> None:
     assert turns[0].speaker == "Ellie"
     assert turns[0].start_time == 0.0
     assert turns[0].end_time == 1.0
+
+
+def test_loader_skips_interviews_without_qr_pairs(monkeypatch) -> None:
+    monkeypatch.setattr(
+        loading_module,
+        "validate_daic_woz",
+        lambda settings: ValidatedSplits({"train": (300,), "dev": (), "test": ()}),
+    )
+    monkeypatch.setattr(
+        loading_module,
+        "_load_split_scores",
+        lambda settings, split: {300: 2.0},
+    )
+    monkeypatch.setattr(
+        loading_module,
+        "_read_transcript",
+        lambda path: [TranscriptTurn("Participant", "opening")],
+    )
+
+    with pytest.warns(RuntimeWarning, match="participant 300"):
+        interviews = loading_module.load_interviews(
+            DataSettings(
+                dataset="daic_woz", root=Path("data"), split_file=Path("splits.json")
+            ),
+            "train",
+        )
+
+    assert interviews == []
 
 
 def _example(participant_id: int, target: float, pair_count: int) -> InterviewExample:
