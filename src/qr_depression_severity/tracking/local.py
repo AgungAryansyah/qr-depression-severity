@@ -16,7 +16,7 @@ class LocalTracker:
         return None
 
     def finish(self) -> None:
-        with (self.run_dir / "train_history.json").open(
+        with (self.run_dir / "tracker_events.json").open(
             "w", encoding="utf-8"
         ) as stream:
             json.dump(self.events, stream, indent=2)

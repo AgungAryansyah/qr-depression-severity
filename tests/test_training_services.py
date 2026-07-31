@@ -58,7 +58,7 @@ def test_trainer_checkpoint_and_local_history(tmp_path: Path) -> None:
         "severity_macro_f1",
         "severity_mae",
     }
-    assert (tmp_path / "train_history.json").is_file()
+    assert (tmp_path / "tracker_events.json").is_file()
 
 
 def test_checkpoint_rejects_an_incompatible_config(tmp_path: Path) -> None:

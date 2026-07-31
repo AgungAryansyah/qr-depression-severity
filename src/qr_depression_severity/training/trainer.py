@@ -83,8 +83,8 @@ class Trainer:
             targets.append(target.detach())
             self.tracker.log_metrics(
                 {
-                    "loss": loss.item(),
-                    **{name: value.item() for name, value in parts.items()},
+                    f"{'train' if training else 'dev'}_{name}": value.item()
+                    for name, value in {"loss": loss, **parts}.items()
                 },
                 step + batch_count,
             )

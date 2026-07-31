@@ -34,6 +34,10 @@ def write_metrics(run_dir: Path, metrics: dict[str, float]) -> None:
     _write_json(run_dir / "metrics.json", metrics)
 
 
+def write_train_history(run_dir: Path, history: list[dict[str, float | int]]) -> None:
+    _write_json(run_dir / "train_history.json", history)
+
+
 def _write_json(path: Path, value: object) -> None:
     with path.open("w", encoding="utf-8") as stream:
         json.dump(value, stream, indent=2, sort_keys=True)
