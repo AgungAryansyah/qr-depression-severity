@@ -43,14 +43,24 @@ def test_never_uses_participant_turn_as_a_question() -> None:
     assert pairs[0].response == "answer"
 
 
-def test_rejects_empty_or_unknown_turns() -> None:
-    with pytest.raises(ValueError, match="Empty Ellie turn"):
-        extract_qr_pairs(
+def test_skips_empty_turns_with_a_participant_warning() -> None:
+    with pytest.warns(RuntimeWarning, match="participant 300"):
+        pairs = extract_qr_pairs(
             300,
-            [TranscriptTurn("Ellie", "  ")],
+            [
+                TranscriptTurn("Ellie", "  "),
+                TranscriptTurn("Ellie", "question"),
+                TranscriptTurn("Participant", "answer"),
+            ],
             PreprocessingSettings(),
         )
 
+    assert [(pair.question, pair.response) for pair in pairs] == [
+        ("question", "answer")
+    ]
+
+
+def test_rejects_unknown_turns() -> None:
     with pytest.raises(ValueError, match="Unsupported speaker"):
         extract_qr_pairs(
             300,

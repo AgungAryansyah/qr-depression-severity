@@ -1,6 +1,7 @@
 """Question-response extraction from DAIC-WOZ transcript turns."""
 
 import re
+import warnings
 from dataclasses import dataclass
 
 from qr_depression_severity.configuration.schema import PreprocessingSettings
@@ -33,6 +34,7 @@ def extract_qr_pairs(
     pairs: list[QrPair] = []
     question_turns: list[TranscriptTurn] = []
     response_turns: list[TranscriptTurn] = []
+    skipped_empty_turns = 0
 
     def emit_pair() -> None:
         if not question_turns or not response_turns:
@@ -50,7 +52,12 @@ def extract_qr_pairs(
         )
 
     for turn in turns:
+        if turn.speaker not in {"Ellie", "Participant"}:
+            raise ValueError(f"Unsupported speaker: {turn.speaker}")
         normalized = _normalize_turn(turn, preprocessing)
+        if normalized is None:
+            skipped_empty_turns += 1
+            continue
         if normalized.speaker == "Ellie":
             if response_turns:
                 emit_pair()
@@ -61,20 +68,25 @@ def extract_qr_pairs(
         elif normalized.speaker == "Participant":
             if question_turns:
                 response_turns.append(normalized)
-        else:
-            raise ValueError(f"Unsupported speaker: {normalized.speaker}")
     emit_pair()
+    if skipped_empty_turns:
+        warnings.warn(
+            f"Skipped {skipped_empty_turns} empty transcript turn(s) for "
+            f"participant {participant_id}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     return pairs
 
 
 def _normalize_turn(
     turn: TranscriptTurn, preprocessing: PreprocessingSettings
-) -> TranscriptTurn:
+) -> TranscriptTurn | None:
     text = turn.text
     if preprocessing.normalize_whitespace:
         text = re.sub(r"\s+", " ", text).strip()
     if preprocessing.lowercase:
         text = text.lower()
     if not text:
-        raise ValueError(f"Empty {turn.speaker} turn after preprocessing")
+        return None
     return TranscriptTurn(turn.speaker, text, turn.start_time, turn.end_time)
