@@ -11,7 +11,9 @@ from qr_depression_severity.training.checkpointing import (
     save_checkpoint,
 )
 from qr_depression_severity.training.losses import combined_loss, severity_levels
+from qr_depression_severity.training.optimizer_factory import build_optimizer
 from qr_depression_severity.training.reproducibility import set_seed, validate_precision
+from qr_depression_severity.training.scheduler_factory import build_scheduler
 from qr_depression_severity.training.trainer import Trainer
 
 
@@ -48,7 +50,14 @@ def test_trainer_checkpoint_and_local_history(tmp_path: Path) -> None:
     assert load_checkpoint(checkpoint, model, optimizer, config) == 1
     tracker.finish()
 
-    assert set(metrics) == {"loss", "rmse", "mae"}
+    assert set(metrics) == {
+        "loss",
+        "rmse",
+        "mae",
+        "severity_accuracy",
+        "severity_macro_f1",
+        "severity_mae",
+    }
     assert (tmp_path / "train_history.json").is_file()
 
 
@@ -77,6 +86,40 @@ def test_fp32_precision_and_seed_control() -> None:
     assert torch.equal(first, torch.rand(1))
 
 
+def test_optimizer_groups_every_trainable_parameter_once() -> None:
+    config = load_experiment_config(
+        Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
+    )
+    optimizer = build_optimizer(_GroupedToyModel(), config.training.optimizer)
+
+    parameters = [
+        parameter for group in optimizer.param_groups for parameter in group["params"]
+    ]
+    assert len({id(parameter) for parameter in parameters}) == len(parameters)
+    assert {group["name"] for group in optimizer.param_groups} == {
+        "adapted_encoder_peft",
+        "semantic_projection",
+        "qr_fusion",
+        "interview_encoder",
+        "heads",
+    }
+
+
+def test_linear_scheduler_warms_up_then_decays() -> None:
+    parameter = nn.Parameter(torch.ones(1))
+    optimizer = torch.optim.AdamW([parameter], lr=1.0)
+    config = load_experiment_config(
+        Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
+    )
+    settings = config.training.scheduler.model_copy(update={"warmup_ratio": 0.5})
+    scheduler = build_scheduler(optimizer, settings, total_steps=4)
+
+    assert optimizer.param_groups[0]["lr"] == 0.5
+    optimizer.step()
+    scheduler.step()
+    assert optimizer.param_groups[0]["lr"] == 1.0
+
+
 class _ToyModel(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -88,3 +131,18 @@ class _ToyModel(nn.Module):
             "prediction": self.prediction(features).squeeze(-1),
             "ordinal_logits": self.ordinal(features),
         }
+
+
+class _GroupedToyModel(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.adapted_encoder = nn.Module()
+        self.adapted_encoder.encoder = nn.Module()
+        self.adapted_encoder.encoder.model = nn.Linear(1, 1)
+        self.adapted_encoder.fusion = nn.Linear(1, 1)
+        self.semantic_encoder = nn.Linear(1, 1)
+        self.interview_model = nn.Module()
+        self.interview_model.branch_fusion = nn.Linear(1, 1)
+        self.interview_model.interview_encoder = nn.Linear(1, 1)
+        self.interview_model.regression_head = nn.Linear(1, 1)
+        self.interview_model.ordinal_head = nn.Linear(1, 1)

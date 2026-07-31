@@ -98,15 +98,23 @@ class ModelSettings(StrictModel):
 
 class OptimizerSettings(StrictModel):
     name: str
+    adapted_encoder_peft_learning_rate: float = Field(gt=0)
+    semantic_projection_learning_rate: float = Field(gt=0)
+    qr_fusion_learning_rate: float = Field(gt=0)
+    interview_encoder_learning_rate: float = Field(gt=0)
+    heads_learning_rate: float = Field(gt=0)
+    weight_decay: float = Field(ge=0)
 
 
 class SchedulerSettings(StrictModel):
     name: str
+    warmup_ratio: float = Field(ge=0, le=1)
 
 
 class EarlyStoppingSettings(StrictModel):
     monitor: str
     patience: int = Field(ge=1)
+    min_delta: float = Field(ge=0)
 
 
 class TrainingSettings(StrictModel):
@@ -115,6 +123,8 @@ class TrainingSettings(StrictModel):
     batch_size: int = Field(ge=1)
     gradient_accumulation_steps: int = Field(ge=1)
     precision: Literal["fp32", "fp16", "bf16"]
+    deterministic: bool
+    gradient_clip_norm: float = Field(gt=0)
     optimizer: OptimizerSettings | None = None
     scheduler: SchedulerSettings | None = None
     early_stopping: EarlyStoppingSettings | None = None
