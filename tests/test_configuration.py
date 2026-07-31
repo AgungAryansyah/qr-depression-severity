@@ -18,6 +18,7 @@ def test_loads_composed_experiment_config() -> None:
     assert config.data.dataset == "daic_woz"
     assert config.model.adapted_encoder is not None
     assert config.model.adapted_encoder.method == "dora"
+    assert config.model.adapted_encoder.gradient_checkpointing
     assert config.model.execution.qr_encoder_micro_batch_size == 4
     assert config.model.execution.adapted_device == "cuda:0"
     assert config.model.execution.semantic_device == "cuda:1"

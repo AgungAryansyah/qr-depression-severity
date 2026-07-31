@@ -145,6 +145,7 @@ def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
         0
         if adapted.method == "frozen"
         else _required(adapted.dropout, "adapted_encoder.dropout"),
+        adapted.gradient_checkpointing,
     )
     semantic_model = AutoModel.from_pretrained(
         _required(semantic.name, "semantic_encoder.name"), revision=semantic.revision

@@ -14,6 +14,7 @@ from qr_depression_severity.models.modern import (
 )
 from qr_depression_severity.models.peft_encoder import (
     discover_deberta_attention_targets,
+    enable_gradient_checkpointing,
     trainable_parameter_report,
 )
 from qr_depression_severity.models.qr_encoder import (
@@ -43,6 +44,16 @@ def test_reports_only_trainable_parameters() -> None:
 
     assert report["trainable"] == 3
     assert report["modules"] == ["1.weight", "1.bias"]
+
+
+def test_enables_gradient_checkpointing_for_adapted_encoder() -> None:
+    model = _CheckpointableModel()
+
+    enable_gradient_checkpointing(model)
+
+    assert model.input_gradients_enabled
+    assert model.checkpointing_enabled
+    assert not model.config.use_cache
 
 
 def test_separate_qr_encoder_and_e5_prefixes() -> None:
@@ -149,3 +160,17 @@ class _ToyTokenModel(nn.Module):
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> object:
         values = input_ids.unsqueeze(-1).float().repeat(1, 1, 2)
         return type("Output", (), {"last_hidden_state": values})
+
+
+class _CheckpointableModel(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.input_gradients_enabled = False
+        self.checkpointing_enabled = False
+        self.config = type("Config", (), {"use_cache": True})()
+
+    def enable_input_require_grads(self) -> None:
+        self.input_gradients_enabled = True
+
+    def gradient_checkpointing_enable(self) -> None:
+        self.checkpointing_enabled = True

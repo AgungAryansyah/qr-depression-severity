@@ -36,6 +36,7 @@ def build_deberta_peft(
     rank: int,
     alpha: int,
     dropout: float,
+    gradient_checkpointing: bool,
 ) -> nn.Module:
     from peft import LoraConfig, TaskType, get_peft_model
     from transformers import AutoModel
@@ -58,7 +59,22 @@ def build_deberta_peft(
         target_modules=list(targets),
         use_dora=method == "dora",
     )
-    return get_peft_model(backbone, peft_config)
+    model = get_peft_model(backbone, peft_config)
+    if gradient_checkpointing:
+        enable_gradient_checkpointing(model)
+    return model
+
+
+def enable_gradient_checkpointing(model: nn.Module) -> None:
+    enable_inputs = getattr(model, "enable_input_require_grads", None)
+    enable_checkpointing = getattr(model, "gradient_checkpointing_enable", None)
+    if not callable(enable_inputs) or not callable(enable_checkpointing):
+        raise ValueError("Adapted encoder does not support gradient checkpointing")
+    enable_inputs()
+    enable_checkpointing()
+    config = getattr(model, "config", None)
+    if config is not None and hasattr(config, "use_cache"):
+        config.use_cache = False
 
 
 def trainable_parameter_report(model: nn.Module) -> dict[str, object]:

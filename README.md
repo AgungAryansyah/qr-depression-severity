@@ -88,6 +88,9 @@ The default configuration uses two GPUs: DeBERTa and the trainable interview
 model run on `cuda:0`, while the frozen E5 branch runs on `cuda:1`. QR pairs are
 encoded in chunks of four to fit 12 GB GPUs. Change either through YAML or the
 same override syntax; set both devices to `cuda:0` for a single-GPU run.
+Gradient checkpointing is enabled for the DoRA encoder to reduce training
+memory; it recomputes activations during backpropagation and is therefore
+slower.
 
 ```bash
 uv run python scripts/train.py \

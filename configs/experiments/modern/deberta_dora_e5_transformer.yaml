@@ -15,6 +15,7 @@ model:
     alpha: 16
     dropout: 0.1
     pooling: masked_mean
+    gradient_checkpointing: true
   semantic_encoder:
     name: intfloat/e5-base-v2
     revision: f52bf8ec8c7124536f0efb74aca902b2995e5bcd

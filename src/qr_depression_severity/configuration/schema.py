@@ -43,6 +43,7 @@ class AdaptedEncoderSettings(StrictModel):
     dropout: float | None = Field(default=None, ge=0, le=1)
     pooling: Literal["masked_mean", "cls", "attention"] | None = None
     target_modules: tuple[str, ...] | None = None
+    gradient_checkpointing: bool = False
 
 
 class SemanticEncoderSettings(StrictModel):
