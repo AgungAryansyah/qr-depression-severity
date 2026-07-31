@@ -3,6 +3,10 @@ experiment:
   name: modern-dora-e5-transformer
   tags: [modern, dora, e5, transformer]
 model:
+  execution:
+    qr_encoder_micro_batch_size: 4
+    adapted_device: cuda:0
+    semantic_device: cuda:1
   adapted_encoder:
     name: microsoft/deberta-v3-base
     method: dora

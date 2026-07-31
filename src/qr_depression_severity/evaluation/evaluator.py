@@ -14,7 +14,11 @@ from qr_depression_severity.configuration.schema import ExperimentConfig
 from qr_depression_severity.data.collators import ModernQrCollator
 from qr_depression_severity.data.loading import load_interviews
 from qr_depression_severity.data.splits import validate_daic_woz
-from qr_depression_severity.models.factory import build_modern_model, build_tokenizers
+from qr_depression_severity.models.factory import (
+    build_modern_model,
+    build_tokenizers,
+    place_model_on_configured_devices,
+)
 from qr_depression_severity.training.checkpointing import load_model_checkpoint
 from qr_depression_severity.training.metrics import ordinal_metrics, regression_metrics
 from qr_depression_severity.training.reproducibility import validate_precision
@@ -38,9 +42,9 @@ def evaluate_checkpoint(
             f"Test predictions already exist for this checkpoint: {predictions_path}"
         )
     precision = validate_precision(config.training.precision)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     validate_daic_woz(config.data)
-    model = build_modern_model(config).to(device)
+    model = build_modern_model(config)
+    device = place_model_on_configured_devices(model, config)
     load_model_checkpoint(checkpoint, model, config)
     adapted_tokenizer, semantic_tokenizer = build_tokenizers(config)
     loader = DataLoader(

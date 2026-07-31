@@ -20,7 +20,14 @@ def test_evaluator_writes_predictions_and_blocks_repeated_test(
     )
     config = base_config.model_copy(
         update={
-            "training": base_config.training.model_copy(update={"precision": "fp32"})
+            "training": base_config.training.model_copy(update={"precision": "fp32"}),
+            "model": base_config.model.model_copy(
+                update={
+                    "execution": base_config.model.execution.model_copy(
+                        update={"adapted_device": "cpu", "semantic_device": "cpu"}
+                    )
+                }
+            ),
         }
     )
     model = _ToyModel()

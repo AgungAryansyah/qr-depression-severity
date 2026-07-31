@@ -13,7 +13,11 @@ from qr_depression_severity.configuration.schema import ExperimentConfig
 from qr_depression_severity.data.collators import ModernQrCollator
 from qr_depression_severity.data.loading import load_interviews
 from qr_depression_severity.data.splits import validate_daic_woz
-from qr_depression_severity.models.factory import build_modern_model, build_tokenizers
+from qr_depression_severity.models.factory import (
+    build_modern_model,
+    build_tokenizers,
+    place_model_on_configured_devices,
+)
 from qr_depression_severity.tracking import build_tracker
 from qr_depression_severity.training.artifacts import (
     initialize_run_artifacts,
@@ -41,7 +45,6 @@ class TrainingResult:
 
 def train_experiment(config: ExperimentConfig) -> TrainingResult:
     precision = validate_precision(config.training.precision)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     set_seed(config.training.seed, config.training.deterministic)
     splits = validate_daic_woz(config.data)
     run_dir = _run_dir(config)
@@ -57,7 +60,8 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
             "semantic_encoder": _require(
                 config.model.semantic_encoder, "semantic_encoder"
             ).name,
-            "device": str(device),
+            "adapted_device": config.model.execution.adapted_device,
+            "semantic_device": config.model.execution.semantic_device,
             "adapted_revision": _require(
                 config.model.adapted_encoder, "adapted_encoder"
             ).revision,
@@ -69,7 +73,8 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
     tracker = build_tracker(config.tracking, run_dir, config.model_dump(mode="json"))
     write_tracking_metadata(run_dir, tracker.run_metadata())
     try:
-        model = build_modern_model(config).to(device)
+        model = build_modern_model(config)
+        device = place_model_on_configured_devices(model, config)
         write_trainable_parameters(run_dir, model)
         adapted_tokenizer, semantic_tokenizer = build_tokenizers(config)
         collator = ModernQrCollator(

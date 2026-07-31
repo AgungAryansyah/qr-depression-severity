@@ -84,6 +84,18 @@ uv run python scripts/train.py \
 CUDA is required by the default `bf16` configuration. CPU is supported for the
 test suite and small `fp32` smoke configurations only.
 
+The default configuration uses two GPUs: DeBERTa and the trainable interview
+model run on `cuda:0`, while the frozen E5 branch runs on `cuda:1`. QR pairs are
+encoded in chunks of four to fit 12 GB GPUs. Change either through YAML or the
+same override syntax; set both devices to `cuda:0` for a single-GPU run.
+
+```bash
+uv run python scripts/train.py \
+  --config configs/experiments/modern/deberta_dora_e5_transformer.yaml \
+  --override model.execution.qr_encoder_micro_batch_size=2 \
+  --override model.execution.semantic_device=cuda:0
+```
+
 For one train/development run:
 
 ```bash

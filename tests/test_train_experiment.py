@@ -22,6 +22,13 @@ def test_train_experiment_writes_a_best_checkpoint(monkeypatch, tmp_path: Path) 
             "training": config.training.model_copy(
                 update={"precision": "fp32", "max_epochs": 2}
             ),
+            "model": config.model.model_copy(
+                update={
+                    "execution": config.model.execution.model_copy(
+                        update={"adapted_device": "cpu", "semantic_device": "cpu"}
+                    )
+                }
+            ),
         }
     )
     monkeypatch.setattr(

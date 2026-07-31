@@ -86,6 +86,12 @@ class HeadSettings(StrictModel):
     dropout: float | None = Field(default=None, ge=0, le=1)
 
 
+class ModelExecutionSettings(StrictModel):
+    qr_encoder_micro_batch_size: int = Field(default=4, ge=1)
+    adapted_device: str = "cuda:0"
+    semantic_device: str = "cuda:0"
+
+
 class ModelSettings(StrictModel):
     adapted_encoder: AdaptedEncoderSettings | None = None
     semantic_encoder: SemanticEncoderSettings | None = None
@@ -93,6 +99,7 @@ class ModelSettings(StrictModel):
     branch_fusion: BranchFusionSettings | None = None
     interview_encoder: InterviewEncoderSettings | None = None
     heads: HeadSettings | None = None
+    execution: ModelExecutionSettings = Field(default_factory=ModelExecutionSettings)
 
 
 class OptimizerSettings(StrictModel):
