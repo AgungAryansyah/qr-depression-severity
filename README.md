@@ -50,6 +50,10 @@ evaluation. It must contain exactly the official 47 test IDs. Data, outputs,
 checkpoints, caches, and W&B directories are ignored by Git. Never log or
 commit transcripts, tokenized data, participant names, or credentials.
 
+Processed QR pairs are cached locally at `cache/qr_pairs` by default. The cache
+is invalidated when transcript metadata or preprocessing settings change;
+disable it with `--override data.qr_cache.enabled=false`.
+
 Validate the dataset before training:
 
 ```bash

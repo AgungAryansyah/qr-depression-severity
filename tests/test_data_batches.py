@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import torch
 
-from qr_depression_severity.configuration.schema import DataSettings
+from qr_depression_severity.configuration.schema import DataSettings, QrCacheSettings
 from qr_depression_severity.data import loading as loading_module
 from qr_depression_severity.data.collators import ModernQrCollator
 from qr_depression_severity.data.loading import InterviewExample, _read_transcript
@@ -86,6 +86,57 @@ def test_loader_skips_interviews_without_qr_pairs(monkeypatch) -> None:
         )
 
     assert interviews == []
+
+
+def test_loader_reuses_qr_cache(monkeypatch, tmp_path: Path) -> None:
+    transcript = tmp_path / "300_TRANSCRIPT.csv"
+    transcript.write_text(
+        "start_time\tstop_time\tspeaker\tvalue\n"
+        "0\t1\tEllie\tQuestion\n"
+        "1\t2\tParticipant\tResponse\n",
+        encoding="utf-8",
+    )
+    settings = DataSettings(
+        dataset="daic_woz",
+        root=tmp_path,
+        split_file=Path("splits.json"),
+        qr_cache=QrCacheSettings(enabled=True, directory=tmp_path / "qr-cache"),
+    )
+    monkeypatch.setattr(
+        loading_module,
+        "validate_daic_woz",
+        lambda settings: ValidatedSplits({"train": (300,), "dev": (), "test": ()}),
+    )
+    monkeypatch.setattr(
+        loading_module,
+        "_load_split_scores",
+        lambda settings, split: {300: 2.0},
+    )
+    extract = loading_module.extract_qr_pairs
+    calls = 0
+
+    def count_extractions(*args: object) -> list[QrPair]:
+        nonlocal calls
+        calls += 1
+        return extract(*args)
+
+    monkeypatch.setattr(loading_module, "extract_qr_pairs", count_extractions)
+
+    first = loading_module.load_interviews(settings, "train")
+    second = loading_module.load_interviews(settings, "train")
+    changed_preprocessing = settings.model_copy(
+        update={
+            "preprocessing": settings.preprocessing.model_copy(
+                update={"lowercase": False}
+            )
+        }
+    )
+    third = loading_module.load_interviews(changed_preprocessing, "train")
+
+    assert first == second
+    assert third[0].qr_pairs[0].question == "Question"
+    assert calls == 2
+    assert (settings.qr_cache.directory / "300.json").is_file()
 
 
 def _example(participant_id: int, target: float, pair_count: int) -> InterviewExample:
