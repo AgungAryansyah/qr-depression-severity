@@ -54,9 +54,9 @@ def load_interviews(settings: DataSettings, split: str) -> list[InterviewExample
 def _load_qr_pairs(
     settings: DataSettings, participant_id: int, transcript_path: Path
 ) -> list[QrPair]:
-    signature = _cache_signature(settings, transcript_path)
-    cache_path = settings.qr_cache.directory / f"{participant_id}.json"
     if settings.qr_cache.enabled:
+        signature = _cache_signature(settings, transcript_path)
+        cache_path = settings.qr_cache.directory / f"{participant_id}.json"
         cached = _read_qr_cache(cache_path, participant_id, signature)
         if cached is not None:
             return cached

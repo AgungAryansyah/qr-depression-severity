@@ -60,7 +60,7 @@ def test_transcript_reader_preserves_turn_metadata(tmp_path: Path) -> None:
     assert turns[0].end_time == 1.0
 
 
-def test_loader_skips_interviews_without_qr_pairs(monkeypatch) -> None:
+def test_loader_skips_interviews_without_qr_pairs(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(
         loading_module,
         "validate_daic_woz",
@@ -80,7 +80,7 @@ def test_loader_skips_interviews_without_qr_pairs(monkeypatch) -> None:
     with pytest.warns(RuntimeWarning, match="participant 300"):
         interviews = loading_module.load_interviews(
             DataSettings(
-                dataset="daic_woz", root=Path("data"), split_file=Path("splits.json")
+                dataset="daic_woz", root=tmp_path, split_file=Path("splits.json")
             ),
             "train",
         )
