@@ -7,9 +7,9 @@ software; it must not be used for diagnosis, treatment, or clinical decisions.
 ## Status
 
 The modern train/dev/test pipeline is implemented and covered by CPU smoke and
-unit tests. No DAIC-WOZ training run, five-seed result, reproduction result, or
-test metric has been verified in this repository. Do not report performance
-claims until the protocol below has been completed.
+unit tests. No DAIC-WOZ training run, five-seed result, or test metric has been
+verified in this repository. Do not report performance claims until the
+protocol below has been completed.
 
 The configured local dataset is missing `458_TRANSCRIPT.csv`. The base config
 skips it with a runtime warning solely as a temporary recovery bypass. Restore
