@@ -48,6 +48,27 @@ def test_fails_when_a_required_transcript_is_missing(tmp_path: Path) -> None:
         )
 
 
+def test_warns_and_skips_an_explicitly_configured_missing_transcript(
+    tmp_path: Path,
+) -> None:
+    manifest_path = Path("configs/data/official_daic_woz.json")
+    manifest = json.loads(manifest_path.read_text())
+    _write_local_partition_files(tmp_path, manifest)
+    (tmp_path / "302_TRANSCRIPT.csv").unlink()
+
+    with pytest.warns(RuntimeWarning, match="restore them before reporting results"):
+        validated = validate_daic_woz(
+            DataSettings(
+                dataset="daic_woz",
+                root=tmp_path,
+                split_file=manifest_path,
+                allowed_missing_transcript_ids=(302,),
+            )
+        )
+
+    assert 302 not in validated.participant_ids["dev"]
+
+
 def test_rejects_overlapping_manifest_membership() -> None:
     manifest = {
         "train": list(range(107)),

@@ -12,6 +12,7 @@ data:
     normalize_whitespace: true
   max_qr_pairs: 128
   max_tokens: 128
+  allowed_missing_transcript_ids: [458]
 model:
   {}
 training:

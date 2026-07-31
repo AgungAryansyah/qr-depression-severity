@@ -26,6 +26,7 @@ class DataSettings(StrictModel):
     )
     max_qr_pairs: int = Field(default=128, ge=1)
     max_tokens: int = Field(default=128, ge=1)
+    allowed_missing_transcript_ids: tuple[int, ...] = ()
 
 
 class PreprocessingSettings(StrictModel):
