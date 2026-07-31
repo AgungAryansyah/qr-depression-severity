@@ -20,10 +20,12 @@ class DataSettings(StrictModel):
     dataset: Literal["daic_woz"]
     root: Path
     split_file: Path
+    test_labels_file: Path | None = None
     preprocessing: "PreprocessingSettings" = Field(
         default_factory=lambda: PreprocessingSettings()
     )
     max_qr_pairs: int = Field(default=128, ge=1)
+    max_tokens: int = Field(default=128, ge=1)
 
 
 class PreprocessingSettings(StrictModel):

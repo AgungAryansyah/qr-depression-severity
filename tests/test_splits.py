@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 
 from qr_depression_severity.configuration.schema import DataSettings
-from qr_depression_severity.data.splits import _validate_manifest, validate_daic_woz
+from qr_depression_severity.data.splits import (
+    _validate_manifest,
+    _validate_test_labels,
+    validate_daic_woz,
+)
 
 
 def test_validates_exact_official_membership(tmp_path: Path) -> None:
@@ -53,6 +57,24 @@ def test_rejects_overlapping_manifest_membership() -> None:
 
     with pytest.raises(ValueError, match="Participant overlap"):
         _validate_manifest(manifest)
+
+
+def test_validates_private_test_labels_against_official_ids(tmp_path: Path) -> None:
+    manifest = json.loads(Path("configs/data/official_daic_woz.json").read_text())
+    labels = tmp_path / "full_test_split.csv"
+    with labels.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=["Participant_ID", "PHQ_Score"])
+        writer.writeheader()
+        writer.writerows(
+            {"Participant_ID": participant_id, "PHQ_Score": 0}
+            for participant_id in manifest["test"]
+        )
+
+    _validate_test_labels(labels, manifest["test"])
+    labels.write_text("Participant_ID,PHQ_Score\n300,25\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="official test membership"):
+        _validate_test_labels(labels, manifest["test"])
 
 
 def _write_local_partition_files(root: Path, manifest: dict[str, list[int]]) -> None:

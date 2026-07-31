@@ -6,10 +6,12 @@ data:
   dataset: daic_woz
   root: data
   split_file: configs/data/official_daic_woz.json
+  test_labels_file: data/full_test_split.csv
   preprocessing:
     lowercase: true
     normalize_whitespace: true
   max_qr_pairs: 128
+  max_tokens: 128
 model:
   {}
 training:

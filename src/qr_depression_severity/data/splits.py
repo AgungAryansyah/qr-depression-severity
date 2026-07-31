@@ -31,6 +31,8 @@ def validate_daic_woz(settings: DataSettings) -> ValidatedSplits:
                 f"{split} split does not match official membership: {source_path}"
             )
         _validate_required_files(settings.root, split, expected_ids)
+    if settings.test_labels_file is not None:
+        _validate_test_labels(settings.test_labels_file, manifest["test"])
     return ValidatedSplits(
         participant_ids={split: tuple(ids) for split, ids in manifest.items()}
     )
@@ -100,3 +102,38 @@ def _validate_required_files(
     ]
     if missing:
         raise FileNotFoundError(f"{split} split is missing transcripts: {missing}")
+
+
+def _validate_test_labels(path: Path, expected_ids: list[int]) -> None:
+    scores = _read_scores(path)
+    if set(scores) != set(expected_ids):
+        raise ValueError(f"Test labels do not match official test membership: {path}")
+    if any(score < 0 or score > 24 for score in scores.values()):
+        raise ValueError(f"Test labels must be between 0 and 24: {path}")
+
+
+def _read_scores(path: Path) -> dict[int, float]:
+    try:
+        with path.open(newline="", encoding="utf-8") as stream:
+            reader = csv.DictReader(stream)
+            if reader.fieldnames is None:
+                raise ValueError(f"Label file has no header: {path}")
+            participant_column = _find_column(reader.fieldnames, "participant_id")
+            score_column = _find_column(reader.fieldnames, "phq8_score", "phq_score")
+            if participant_column is None or score_column is None:
+                raise ValueError(
+                    f"Label file lacks participant ID or PHQ score: {path}"
+                )
+            return {
+                int(row[participant_column]): float(row[score_column]) for row in reader
+            }
+    except FileNotFoundError as error:
+        raise FileNotFoundError(f"Test labels are missing: {path}") from error
+
+
+def _find_column(fieldnames: list[str], *candidates: str) -> str | None:
+    normalized = {name.casefold(): name for name in fieldnames}
+    for candidate in candidates:
+        if candidate in normalized:
+            return normalized[candidate]
+    return None
