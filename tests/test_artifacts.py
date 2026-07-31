@@ -10,16 +10,16 @@ from qr_depression_severity.training.artifacts import (
 )
 
 
-def test_writes_reproduction_artifacts(tmp_path: Path) -> None:
+def test_writes_modern_artifacts(tmp_path: Path) -> None:
     config = load_experiment_config(
-        Path("configs/experiments/reproduction/warmstart_dual.yaml")
+        Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
     )
 
     initialize_run_artifacts(
         tmp_path,
         config,
         {"train": (303,), "dev": (302,), "test": (300,)},
-        {"seed": 0, "model_name": "roberta-base"},
+        {"seed": 0, "model_name": "microsoft/deberta-v3-base"},
     )
     write_metrics(tmp_path, {"rmse": 1.0, "mae": 0.5})
 

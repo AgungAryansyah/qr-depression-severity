@@ -22,7 +22,7 @@ def test_loads_composed_experiment_config() -> None:
 
 def test_override_is_validated() -> None:
     config = load_experiment_config(
-        Path("configs/experiments/reproduction/warmstart_dual.yaml"),
+        Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml"),
         ("training.seed=7",),
     )
 
@@ -68,9 +68,9 @@ tracking: {backend: disabled, mode: disabled}
 
 def test_writes_resolved_config(tmp_path: Path) -> None:
     config = load_experiment_config(
-        Path("configs/experiments/reproduction/warmstart_dual.yaml")
+        Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
     )
 
     destination = write_resolved_config(config, tmp_path)
 
-    assert "reproduction-warmstart-dual" in destination.read_text()
+    assert "modern-dora-e5-transformer" in destination.read_text()
