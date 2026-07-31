@@ -45,6 +45,7 @@ def test_train_experiment_writes_a_best_checkpoint(monkeypatch, tmp_path: Path) 
     result = train_module.train_experiment(config)
 
     assert result.best_epoch in {1, 2}
+    assert result.run_dir.name.startswith("seed-0-")
     assert (result.run_dir / "best_checkpoint.pt").is_file()
     assert (result.run_dir / "config.resolved.yaml").is_file()
     assert (result.run_dir / "train_history.json").is_file()

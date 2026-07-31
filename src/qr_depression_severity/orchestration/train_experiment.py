@@ -1,6 +1,7 @@
 """One-seed modern-model training orchestration."""
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from math import ceil
 from pathlib import Path
 from typing import TypeVar
@@ -194,11 +195,15 @@ def _run_dir(config: ExperimentConfig) -> Path:
     path = (
         config.experiment.output_dir
         / config.experiment.name
-        / f"seed-{config.training.seed}"
+        / f"seed-{config.training.seed}-{_timestamp()}"
     )
     if path.exists():
         raise FileExistsError(f"Run directory already exists: {path}")
     return path
+
+
+def _timestamp() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
 
 
 _Value = TypeVar("_Value")

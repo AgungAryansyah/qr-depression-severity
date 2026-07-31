@@ -151,6 +151,9 @@ dev_predictions.csv             # after explicit dev evaluation
 test_predictions.csv            # after final test evaluation
 ```
 
+Run directories use `seed-<seed>-<UTC timestamp>`, so retries preserve prior
+artifacts rather than overwriting them.
+
 `metadata.json` records Git state, Python/uv and lockfile provenance, selected
 models and revisions, seed, and device. `environment.json` records package and
 hardware versions. Prediction CSVs contain only participant ID, prediction, and
