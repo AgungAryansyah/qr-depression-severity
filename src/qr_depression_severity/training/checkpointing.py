@@ -38,3 +38,13 @@ def load_checkpoint(
     model.load_state_dict(checkpoint["model"])
     optimizer.load_state_dict(checkpoint["optimizer"])
     return int(checkpoint["epoch"])
+
+
+def load_model_checkpoint(
+    path: Path, model: nn.Module, config: ExperimentConfig
+) -> int:
+    checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+    if checkpoint["config"] != config.model_dump(mode="json"):
+        raise ValueError("Checkpoint configuration is incompatible with this run")
+    model.load_state_dict(checkpoint["model"])
+    return int(checkpoint["epoch"])

@@ -8,9 +8,11 @@ from qr_depression_severity.configuration.loader import load_experiment_config
 from qr_depression_severity.tracking.local import LocalTracker
 from qr_depression_severity.training.checkpointing import (
     load_checkpoint,
+    load_model_checkpoint,
     save_checkpoint,
 )
 from qr_depression_severity.training.losses import combined_loss, severity_levels
+from qr_depression_severity.training.metrics import quadratic_weighted_kappa
 from qr_depression_severity.training.optimizer_factory import build_optimizer
 from qr_depression_severity.training.reproducibility import set_seed, validate_precision
 from qr_depression_severity.training.scheduler_factory import build_scheduler
@@ -57,6 +59,7 @@ def test_trainer_checkpoint_and_local_history(tmp_path: Path) -> None:
         "severity_accuracy",
         "severity_macro_f1",
         "severity_mae",
+        "quadratic_weighted_kappa",
     }
     assert (tmp_path / "tracker_events.json").is_file()
 
@@ -75,6 +78,8 @@ def test_checkpoint_rejects_an_incompatible_config(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="incompatible"):
         load_checkpoint(checkpoint, model, optimizer, incompatible)
+    with pytest.raises(ValueError, match="incompatible"):
+        load_model_checkpoint(checkpoint, model, incompatible)
 
 
 def test_fp32_precision_and_seed_control() -> None:
@@ -118,6 +123,12 @@ def test_linear_scheduler_warms_up_then_decays() -> None:
     optimizer.step()
     scheduler.step()
     assert optimizer.param_groups[0]["lr"] == 1.0
+
+
+def test_quadratic_weighted_kappa_for_identical_levels() -> None:
+    levels = torch.tensor([0, 1, 2, 3, 4])
+
+    assert quadratic_weighted_kappa(levels, levels) == 1.0
 
 
 class _ToyModel(nn.Module):
