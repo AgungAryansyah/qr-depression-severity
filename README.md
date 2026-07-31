@@ -14,8 +14,8 @@ and local/offline tracking primitives.
 
 No DAIC-WOZ reproduction or modern-model result has been run. Do not report
 baseline equivalence, five-seed metrics, or test performance from this revision.
-The local copy currently lacks `458_TRANSCRIPT.csv`, so partition validation
-correctly fails until that official development transcript is restored.
+The local copy currently lacks `458_TRANSCRIPT.csv`. The base configuration
+explicitly skips it with a runtime warning; restore it before reporting results.
 
 ## Setup
 
