@@ -42,6 +42,7 @@ def test_warm_start_copies_compatible_modules_and_keeps_them_trainable(
 
     assert provenance is not None
     assert provenance.source_epoch == 4
+    assert provenance.source_config["model"]["semantic_encoder"]["enabled"] is False
     assert provenance.copied_parameters
     assert torch.equal(target.adapted_encoder.weight, source.adapted_encoder.weight)
     assert torch.equal(

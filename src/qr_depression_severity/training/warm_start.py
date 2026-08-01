@@ -22,6 +22,7 @@ class WarmStartProvenance:
     source_checkpoint: str
     source_sha256: str
     source_epoch: int
+    source_config: dict[str, object]
     copied_parameters: tuple[str, ...]
 
     def as_dict(self) -> dict[str, object]:
@@ -56,6 +57,7 @@ def apply_warm_start(
         source_checkpoint=str(source_path),
         source_sha256=_sha256(source_path),
         source_epoch=source_epoch,
+        source_config=source_config.model_dump(mode="json"),
         copied_parameters=tuple(copied),
     )
 
