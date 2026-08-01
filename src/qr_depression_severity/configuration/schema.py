@@ -163,6 +163,8 @@ class TrackingSettings(StrictModel):
     watch_model: bool = False
     console: bool = False
     console_every_n_batches: int = Field(default=1, ge=1)
+    dotenv_path: Path = Path(".env")
+    api_key_env: str = Field(default="WANDB_API_KEY", min_length=1)
 
 
 class ExperimentConfig(StrictModel):

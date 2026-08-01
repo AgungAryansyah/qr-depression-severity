@@ -1,0 +1,18 @@
+extends: deberta_dora_e5_transformer.yaml
+tracking:
+  backend: wandb
+  mode: online
+  project: qr-depression-severity
+  entity: null
+  group: modern-dora-e5-transformer
+  run_name: null
+  job_type: train
+  tags: [modern, dora, e5, transformer, daic-woz]
+  log_model: true
+  log_predictions: true
+  log_attention: false
+  watch_model: false
+  console: true
+  console_every_n_batches: 1
+  dotenv_path: .env
+  api_key_env: WANDB_API_KEY

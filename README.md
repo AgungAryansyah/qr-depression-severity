@@ -147,10 +147,20 @@ accuracy, macro-F1, quadratic weighted kappa, and severity-level MAE.
 ## Tracking and artifacts
 
 Configure `tracking.backend` as `disabled`, `local`, or `wandb`; W&B modes are
-`online` or `offline`. Authenticate with `wandb login` or environment variables,
-never YAML. Five-seed runs share a group and receive distinct seed run names.
-If W&B initialization fails, training continues with local artifacts and a
-recorded fallback reason.
+`online` or `offline`. W&B API keys belong only in the Git-ignored `.env`, never
+YAML, resolved configuration, or run artifacts:
+
+```bash
+cp .env.example .env
+# Set WANDB_API_KEY in .env.
+uv run python scripts/train.py \
+  --config configs/experiments/modern/deberta_dora_e5_transformer_wandb.yaml
+```
+
+An exported `WANDB_API_KEY` takes precedence over `.env`. Online tracking fails
+before model construction when no key is configured. Five-seed runs share a
+group and receive distinct seed run names. Other W&B initialization failures
+fall back to local artifacts with a recorded warning.
 
 Each seed directory contains:
 
