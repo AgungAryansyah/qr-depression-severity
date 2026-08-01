@@ -1,0 +1,4 @@
+extends: ../modern/deberta_dora_e5_transformer.yaml
+experiment:
+  name: ablation-reference
+  tags: [ablation, reference]

@@ -6,6 +6,7 @@ from typing import Any
 
 import yaml
 
+from qr_depression_severity.configuration.ablation import AblationStudyConfig
 from qr_depression_severity.configuration.schema import ExperimentConfig
 
 
@@ -26,6 +27,31 @@ def write_resolved_config(config: ExperimentConfig, output_dir: Path) -> Path:
             config.model_dump(mode="json"), stream, sort_keys=False, allow_unicode=True
         )
     return destination
+
+
+def load_ablation_study(path: Path) -> AblationStudyConfig:
+    resolved_path = path.resolve()
+    study = AblationStudyConfig.model_validate(_load_mapping(resolved_path))
+    return study.model_copy(
+        update={
+            "candidates": tuple(
+                candidate.model_copy(
+                    update={
+                        "config": (resolved_path.parent / candidate.config).resolve(),
+                        "warm_start_source_config": (
+                            (
+                                resolved_path.parent
+                                / candidate.warm_start_source_config
+                            ).resolve()
+                            if candidate.warm_start_source_config is not None
+                            else None
+                        ),
+                    }
+                )
+                for candidate in study.candidates
+            )
+        }
+    )
 
 
 def _load_mapping(path: Path) -> dict[str, Any]:

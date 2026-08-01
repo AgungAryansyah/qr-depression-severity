@@ -1,0 +1,6 @@
+extends: reference.yaml
+experiment:
+  name: ablation-warm-stage-one
+model:
+  semantic_encoder:
+    enabled: false

@@ -1,0 +1,44 @@
+study:
+  name: core-modern
+  output_dir: outputs/ablations
+  screening_seeds: [0]
+  confirmation_seeds: [0, 1, 2, 3, 4]
+candidates:
+  - id: reference
+    axis: reference
+    config: ../experiments/ablations/reference.yaml
+    reference: true
+  - id: adapted-frozen
+    axis: adaptation
+    config: ../experiments/ablations/adapted_frozen.yaml
+  - id: adapted-lora
+    axis: adaptation
+    config: ../experiments/ablations/adapted_lora.yaml
+  - id: no-semantic
+    axis: semantic
+    config: ../experiments/ablations/no_semantic.yaml
+  - id: fusion-average
+    axis: branch_fusion
+    config: ../experiments/ablations/fusion_average.yaml
+  - id: fusion-concat
+    axis: branch_fusion
+    config: ../experiments/ablations/fusion_concat.yaml
+  - id: fusion-scalar-gate
+    axis: branch_fusion
+    config: ../experiments/ablations/fusion_scalar_gate.yaml
+  - id: transformer-1layer
+    axis: interview_encoder
+    config: ../experiments/ablations/interview_transformer_1layer.yaml
+  - id: mse-only
+    axis: objective
+    config: ../experiments/ablations/mse_only.yaml
+  - id: huber-only
+    axis: objective
+    config: ../experiments/ablations/huber_only.yaml
+  - id: mse-corn
+    axis: objective
+    config: ../experiments/ablations/mse_corn.yaml
+  - id: warm-average
+    axis: warm_start
+    config: ../experiments/ablations/warm_average.yaml
+    warm_start_source_config: ../experiments/ablations/warm_stage_one.yaml

@@ -1,0 +1,8 @@
+extends: reference.yaml
+experiment:
+  name: ablation-mse-only
+model:
+  heads:
+    regression_loss: mse
+    ordinal_loss: none
+    ordinal_loss_weight: 0.0

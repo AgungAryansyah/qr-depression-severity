@@ -1,0 +1,7 @@
+extends: reference.yaml
+experiment:
+  name: ablation-huber-only
+model:
+  heads:
+    ordinal_loss: none
+    ordinal_loss_weight: 0.0

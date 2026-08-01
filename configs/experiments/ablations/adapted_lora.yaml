@@ -1,0 +1,6 @@
+extends: reference.yaml
+experiment:
+  name: ablation-adapted-lora
+model:
+  adapted_encoder:
+    method: lora

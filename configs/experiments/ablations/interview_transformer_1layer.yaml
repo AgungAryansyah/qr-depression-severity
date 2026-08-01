@@ -1,0 +1,6 @@
+extends: reference.yaml
+experiment:
+  name: ablation-interview-transformer-1layer
+model:
+  interview_encoder:
+    layers: 1

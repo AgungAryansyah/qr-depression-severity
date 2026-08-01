@@ -1,0 +1,6 @@
+extends: reference.yaml
+experiment:
+  name: ablation-mse-corn
+model:
+  heads:
+    regression_loss: mse

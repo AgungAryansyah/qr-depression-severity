@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from qr_depression_severity.configuration.loader import (
+    load_ablation_study,
     load_experiment_config,
     write_resolved_config,
 )
@@ -81,3 +82,17 @@ def test_writes_resolved_config(tmp_path: Path) -> None:
     destination = write_resolved_config(config, tmp_path)
 
     assert "modern-dora-e5-transformer" in destination.read_text()
+
+
+def test_loads_core_ablation_study_with_resolved_candidate_paths() -> None:
+    study = load_ablation_study(Path("configs/ablations/core.yaml"))
+
+    assert study.study.name == "core-modern"
+    assert study.study.confirmation_seeds == (0, 1, 2, 3, 4)
+    assert sum(candidate.reference for candidate in study.candidates) == 1
+    assert all(candidate.config.is_file() for candidate in study.candidates)
+    warm_start = next(
+        candidate for candidate in study.candidates if candidate.id == "warm-average"
+    )
+    assert warm_start.warm_start_source_config is not None
+    assert warm_start.warm_start_source_config.is_file()

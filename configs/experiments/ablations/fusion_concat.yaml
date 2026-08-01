@@ -1,0 +1,6 @@
+extends: reference.yaml
+experiment:
+  name: ablation-fusion-concat
+model:
+  branch_fusion:
+    mode: concat

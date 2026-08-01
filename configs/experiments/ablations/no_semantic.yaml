@@ -1,0 +1,6 @@
+extends: reference.yaml
+experiment:
+  name: ablation-no-semantic
+model:
+  semantic_encoder:
+    enabled: false

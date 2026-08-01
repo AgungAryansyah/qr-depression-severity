@@ -1,0 +1,10 @@
+extends: reference.yaml
+experiment:
+  name: ablation-warm-average
+model:
+  branch_fusion:
+    mode: average
+training:
+  initialization:
+    mode: warm_start
+    source_checkpoint: null
