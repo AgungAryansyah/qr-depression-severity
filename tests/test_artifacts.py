@@ -85,13 +85,20 @@ def test_wandb_online_loads_api_key_from_dotenv_without_overriding_environment(
     monkeypatch.setenv("WANDB_API_KEY", "environment-key")
 
     tracker_instance = tracking.build_tracker(
-        settings, tmp_path, {"seed": 0}, run_id="existing-run"
+        settings, tmp_path, config.model_dump(mode="json"), run_id="existing-run"
     )
 
     assert fake_wandb.options["project"] == "qr-depression-severity"
     assert fake_wandb.options["mode"] == "online"
     assert fake_wandb.options["id"] == "existing-run"
     assert fake_wandb.options["resume"] == "must"
+    assert {
+        "modern",
+        "adapted:microsoft/deberta-v3-base",
+        "adaptation:dora",
+        "semantic:intfloat/e5-base-v2",
+        "interview:transformer",
+    } <= set(fake_wandb.options["tags"])
     assert tracker_instance.run_metadata()["id"] == "run-1"
     assert os.environ["WANDB_API_KEY"] == "environment-key"
 

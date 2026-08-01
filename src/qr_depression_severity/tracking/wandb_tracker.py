@@ -1,6 +1,7 @@
 """Weights & Biases tracking adapter."""
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -34,7 +35,11 @@ class WandbTracker:
             "group": settings.group,
             "name": settings.run_name,
             "job_type": settings.job_type,
-            "tags": list(settings.tags),
+            "tags": list(
+                dict.fromkeys(
+                    (*settings.tags, *_experiment_tags(config), *_model_tags(config))
+                )
+            ),
             "notes": settings.notes,
             "mode": settings.mode,
             "config": config,
@@ -63,3 +68,42 @@ class WandbTracker:
 
     def finish(self) -> None:
         self.run.finish()
+
+
+def _model_tags(config: Mapping[str, object]) -> tuple[str, ...]:
+    model = config.get("model")
+    if not isinstance(model, Mapping):
+        return ()
+    tags: list[str] = []
+    adapted = _setting(model, "adapted_encoder")
+    semantic = _setting(model, "semantic_encoder")
+    _append_tag(tags, "adapted", adapted.get("name"))
+    _append_tag(tags, "adaptation", adapted.get("method"))
+    if semantic.get("enabled") is False:
+        tags.append("semantic:disabled")
+    else:
+        _append_tag(tags, "semantic", semantic.get("name"))
+    _append_tag(tags, "qr-fusion", _setting(model, "qr_fusion").get("mode"))
+    _append_tag(tags, "branch-fusion", _setting(model, "branch_fusion").get("mode"))
+    interview = _setting(model, "interview_encoder")
+    _append_tag(tags, "interview", interview.get("name"))
+    _append_tag(tags, "regression", _setting(model, "heads").get("regression_loss"))
+    _append_tag(tags, "ordinal", _setting(model, "heads").get("ordinal_loss"))
+    return tuple(tags)
+
+
+def _experiment_tags(config: Mapping[str, object]) -> tuple[str, ...]:
+    tags = _setting(config, "experiment").get("tags")
+    if not isinstance(tags, (list, tuple)):
+        return ()
+    return tuple(tag for tag in tags if isinstance(tag, str))
+
+
+def _setting(model: Mapping[str, object], name: str) -> Mapping[str, object]:
+    value = model.get(name)
+    return value if isinstance(value, Mapping) else {}
+
+
+def _append_tag(tags: list[str], prefix: str, value: object) -> None:
+    if isinstance(value, str) and value:
+        tags.append(f"{prefix}:{value}")

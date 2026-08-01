@@ -4,6 +4,7 @@ import pytest
 
 from qr_depression_severity.configuration.loader import (
     load_ablation_study,
+    load_experiment_config,
     write_resolved_config,
 )
 from qr_depression_severity.evaluation.evaluator import EvaluationResult
@@ -93,6 +94,32 @@ def test_screening_retains_reference_and_best_candidate_per_axis(
 
     assert "reference" in finalists
     assert "adapted-lora" in finalists
+
+
+def test_ablation_uses_one_group_with_distinct_candidate_runs() -> None:
+    study = load_ablation_study(Path("configs/ablations/core.yaml"))
+    reference = next(candidate for candidate in study.candidates if candidate.reference)
+    lora = next(
+        candidate for candidate in study.candidates if candidate.id == "adapted-lora"
+    )
+
+    reference_config = ablation_module._run_config(
+        study,
+        load_experiment_config(reference.config),
+        reference.id,
+        reference.axis,
+        0,
+        "screen",
+    )
+    lora_config = ablation_module._run_config(
+        study, load_experiment_config(lora.config), lora.id, lora.axis, 0, "screen"
+    )
+
+    assert reference_config.tracking.group == "core-modern"
+    assert reference_config.tracking.run_name == "reference-screen-seed-0"
+    assert lora_config.tracking.run_name == "adapted-lora-screen-seed-0"
+    assert reference_config.tracking.run_name != lora_config.tracking.run_name
+    assert "candidate:adapted-lora" in lora_config.tracking.tags
 
 
 def _rmse(name: str) -> float:

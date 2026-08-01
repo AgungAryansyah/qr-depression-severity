@@ -200,7 +200,16 @@ def _run_config(
 ) -> ExperimentConfig:
     run_name = f"{candidate_id}-{phase}-seed-{seed}"
     tags = tuple(
-        dict.fromkeys((*config.experiment.tags, "ablation", study.study.name, axis))
+        dict.fromkeys(
+            (
+                *config.tracking.tags,
+                *config.experiment.tags,
+                "ablation",
+                f"study:{study.study.name}",
+                f"axis:{axis}",
+                f"candidate:{candidate_id}",
+            )
+        )
     )
     return config.model_copy(
         update={
@@ -214,7 +223,7 @@ def _run_config(
             "training": config.training.model_copy(update={"seed": seed}),
             "tracking": config.tracking.model_copy(
                 update={
-                    "group": f"{study.study.name}-{candidate_id}",
+                    "group": study.study.name,
                     "run_name": run_name,
                     "tags": tags,
                 }
