@@ -39,6 +39,20 @@ def test_severity_boundaries_and_combined_loss() -> None:
     assert set(parts) == {"regression", "ordinal"}
 
 
+def test_regression_only_loss_does_not_require_ordinal_logits() -> None:
+    loss, parts = combined_loss(
+        prediction=torch.tensor([1.0, 2.0]),
+        target=torch.tensor([1.0, 4.0]),
+        ordinal_logits=None,
+        ordinal_weight=0.0,
+        regression="mse",
+        huber_delta=2.0,
+    )
+
+    assert loss == pytest.approx(2.0)
+    assert parts["ordinal"].item() == 0.0
+
+
 def test_regression_error_diagnostics() -> None:
     metrics = regression_metrics(torch.tensor([3.0, -1.0]), torch.tensor([1.0, 3.0]))
 

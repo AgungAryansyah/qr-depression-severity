@@ -57,17 +57,13 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
             "adapted_encoder": _require(
                 config.model.adapted_encoder, "adapted_encoder"
             ).name,
-            "semantic_encoder": _require(
-                config.model.semantic_encoder, "semantic_encoder"
-            ).name,
+            "semantic_encoder": _semantic_metadata(config, "name"),
             "adapted_device": config.model.execution.adapted_device,
             "semantic_device": config.model.execution.semantic_device,
             "adapted_revision": _require(
                 config.model.adapted_encoder, "adapted_encoder"
             ).revision,
-            "semantic_revision": _require(
-                config.model.semantic_encoder, "semantic_encoder"
-            ).revision,
+            "semantic_revision": _semantic_metadata(config, "revision"),
         },
     )
     tracker = build_tracker(config.tracking, run_dir, config.model_dump(mode="json"))
@@ -237,3 +233,10 @@ def _require(value: _Value | None, name: str) -> _Value:
     if value is None:
         raise ValueError(f"Configuration requires {name}")
     return value
+
+
+def _semantic_metadata(config: ExperimentConfig, field: str) -> str | None:
+    semantic = config.model.semantic_encoder
+    if semantic is None or not semantic.enabled:
+        return None
+    return getattr(semantic, field)

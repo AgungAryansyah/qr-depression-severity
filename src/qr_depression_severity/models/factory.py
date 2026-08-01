@@ -25,7 +25,7 @@ class EndToEndModernModel(nn.Module):
     def __init__(
         self,
         adapted_encoder: SeparateQrEncoder,
-        semantic_encoder: SeparateQrEncoder,
+        semantic_encoder: SeparateQrEncoder | None,
         interview_model: ModernDepressionModel,
         qr_encoder_micro_batch_size: int,
     ) -> None:
@@ -39,7 +39,8 @@ class EndToEndModernModel(nn.Module):
         self, adapted_device: torch.device, semantic_device: torch.device
     ) -> None:
         self.adapted_encoder.to(adapted_device)
-        self.semantic_encoder.to(semantic_device)
+        if self.semantic_encoder is not None:
+            self.semantic_encoder.to(semantic_device)
         self.interview_model.to(adapted_device)
 
     def forward(
@@ -48,13 +49,15 @@ class EndToEndModernModel(nn.Module):
         adapted_question_attention_mask: Tensor,
         adapted_response_input_ids: Tensor,
         adapted_response_attention_mask: Tensor,
-        semantic_question_input_ids: Tensor,
-        semantic_question_attention_mask: Tensor,
-        semantic_response_input_ids: Tensor,
-        semantic_response_attention_mask: Tensor,
-        qr_mask: Tensor,
+        semantic_question_input_ids: Tensor | None = None,
+        semantic_question_attention_mask: Tensor | None = None,
+        semantic_response_input_ids: Tensor | None = None,
+        semantic_response_attention_mask: Tensor | None = None,
+        qr_mask: Tensor | None = None,
         participant_id: Tensor | None = None,
     ) -> dict[str, Tensor | None]:
+        if qr_mask is None:
+            raise ValueError("QR mask is required")
         adapted_qr = self._encode(
             self.adapted_encoder,
             adapted_question_input_ids,
@@ -63,17 +66,27 @@ class EndToEndModernModel(nn.Module):
             adapted_response_attention_mask,
             qr_mask,
         )
-        semantic_qr = self._encode(
-            self.semantic_encoder,
-            semantic_question_input_ids,
-            semantic_question_attention_mask,
-            semantic_response_input_ids,
-            semantic_response_attention_mask,
-            qr_mask,
-        )
+        semantic_qr = None
+        if self.semantic_encoder is not None:
+            semantic_inputs = (
+                semantic_question_input_ids,
+                semantic_question_attention_mask,
+                semantic_response_input_ids,
+                semantic_response_attention_mask,
+            )
+            if any(value is None for value in semantic_inputs):
+                raise ValueError("Semantic encoder requires all semantic inputs")
+            semantic_qr = self._encode(
+                self.semantic_encoder,
+                semantic_question_input_ids,
+                semantic_question_attention_mask,
+                semantic_response_input_ids,
+                semantic_response_attention_mask,
+                qr_mask,
+            )
         return self.interview_model(
             adapted_qr,
-            semantic_qr.to(adapted_qr.device),
+            semantic_qr.to(adapted_qr.device) if semantic_qr is not None else None,
             qr_mask.to(adapted_qr.device),
         )
 
@@ -118,9 +131,7 @@ class EndToEndModernModel(nn.Module):
 
 def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
     adapted = _required(config.model.adapted_encoder, "adapted_encoder")
-    semantic = _required(config.model.semantic_encoder, "semantic_encoder")
     qr_fusion = _required(config.model.qr_fusion, "qr_fusion")
-    branch_fusion = _required(config.model.branch_fusion, "branch_fusion")
     interview = _required(config.model.interview_encoder, "interview_encoder")
     heads = _required(config.model.heads, "heads")
     if adapted.method not in {"frozen", "lora", "dora"}:
@@ -147,8 +158,15 @@ def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
         else _required(adapted.dropout, "adapted_encoder.dropout"),
         adapted.gradient_checkpointing,
     )
-    semantic_model = AutoModel.from_pretrained(
-        _required(semantic.name, "semantic_encoder.name"), revision=semantic.revision
+    semantic = config.model.semantic_encoder
+    semantic_enabled = semantic is not None and semantic.enabled
+    semantic_model = (
+        AutoModel.from_pretrained(
+            _required(semantic.name, "semantic_encoder.name"),
+            revision=semantic.revision,
+        )
+        if semantic_enabled
+        else None
     )
     hidden_size = _required(qr_fusion.hidden_size, "qr_fusion.hidden_size")
     adapted_branch = SeparateQrEncoder(
@@ -157,25 +175,38 @@ def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
             adapted_model.config.hidden_size, hidden_size, qr_fusion.dropout or 0
         ),
     )
-    semantic_branch = SeparateQrEncoder(
-        PooledTokenEncoder(
-            semantic_model,
-            frozen=semantic.frozen is True,
-            normalize=semantic.normalize is True,
-        ),
-        QrFeatureFusion(
-            semantic_model.config.hidden_size, hidden_size, qr_fusion.dropout or 0
-        ),
+    semantic_branch = (
+        SeparateQrEncoder(
+            PooledTokenEncoder(
+                semantic_model,
+                frozen=semantic.frozen is True,
+                normalize=semantic.normalize is True,
+            ),
+            QrFeatureFusion(
+                semantic_model.config.hidden_size, hidden_size, qr_fusion.dropout or 0
+            ),
+        )
+        if semantic_model is not None and semantic is not None
+        else None
+    )
+    branch_fusion = (
+        _required(config.model.branch_fusion, "branch_fusion")
+        if semantic_enabled
+        else None
     )
     return EndToEndModernModel(
         adapted_branch,
         semantic_branch,
         ModernDepressionModel(
-            BranchFusion(
-                hidden_size,
-                branch_fusion.mode,
-                branch_fusion.dropout or 0,
-                branch_fusion.branch_dropout or 0,
+            (
+                BranchFusion(
+                    hidden_size,
+                    branch_fusion.mode,
+                    branch_fusion.dropout or 0,
+                    branch_fusion.branch_dropout or 0,
+                )
+                if branch_fusion is not None
+                else None
             ),
             InterviewTransformer(
                 hidden_size,
@@ -189,7 +220,7 @@ def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
                 interview.pooling or "attention",
             ),
             RegressionHead(hidden_size, heads.dropout or 0),
-            CornHead(hidden_size),
+            CornHead(hidden_size) if heads.ordinal_loss == "corn" else None,
         ),
         config.model.execution.qr_encoder_micro_batch_size,
     )
@@ -207,14 +238,21 @@ def place_model_on_configured_devices(
     return adapted_device
 
 
-def build_tokenizers(config: ExperimentConfig) -> tuple[object, object]:
+def build_tokenizers(config: ExperimentConfig) -> tuple[object, object | None]:
     adapted = _required(config.model.adapted_encoder, "adapted_encoder")
-    semantic = _required(config.model.semantic_encoder, "semantic_encoder")
+    semantic = config.model.semantic_encoder
     from transformers import AutoTokenizer
 
     return (
         AutoTokenizer.from_pretrained(adapted.name, revision=adapted.revision),
-        AutoTokenizer.from_pretrained(semantic.name, revision=semantic.revision),
+        (
+            AutoTokenizer.from_pretrained(
+                _required(semantic.name, "semantic_encoder.name"),
+                revision=semantic.revision,
+            )
+            if semantic is not None and semantic.enabled
+            else None
+        ),
     )
 
 

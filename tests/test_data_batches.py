@@ -46,6 +46,16 @@ def test_collator_rejects_implicit_qr_truncation() -> None:
         raise AssertionError("Expected explicit QR length failure")
 
 
+def test_collator_omits_semantic_inputs_when_disabled() -> None:
+    adapted = _Tokenizer()
+    collator = ModernQrCollator(adapted, None, max_qr_pairs=2, max_tokens=4)
+
+    batch = collator([_example(300, 2.0, 1)])
+
+    assert "semantic_question_input_ids" not in batch
+    assert len(adapted.calls) == 2
+
+
 def test_transcript_reader_preserves_turn_metadata(tmp_path: Path) -> None:
     transcript = tmp_path / "300_TRANSCRIPT.csv"
     transcript.write_text(

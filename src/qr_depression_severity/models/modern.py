@@ -64,12 +64,17 @@ class BranchFusion(nn.Module):
             raise ValueError(f"Unsupported branch fusion: {mode}")
         self.mode = mode
         self.branch_dropout = branch_dropout
-        self.concat = nn.Linear(hidden_size * 2, hidden_size)
-        gate_size = 1 if mode == "scalar_gate" else hidden_size
-        self.gate = nn.Sequential(
-            nn.Linear(hidden_size * 2, hidden_size),
-            nn.GELU(),
-            nn.Linear(hidden_size, gate_size),
+        self.concat = (
+            nn.Linear(hidden_size * 2, hidden_size) if mode == "concat" else None
+        )
+        self.gate = (
+            nn.Sequential(
+                nn.Linear(hidden_size * 2, hidden_size),
+                nn.GELU(),
+                nn.Linear(hidden_size, 1 if mode == "scalar_gate" else hidden_size),
+            )
+            if mode in {"scalar_gate", "vector_gate"}
+            else None
         )
         self.normalization = nn.LayerNorm(hidden_size)
         self.dropout = nn.Dropout(dropout)
@@ -81,8 +86,12 @@ class BranchFusion(nn.Module):
         if self.mode == "average":
             fused, gate = (adapted + semantic) / 2, None
         elif self.mode == "concat":
+            if self.concat is None:
+                raise RuntimeError("Concat fusion is not initialized")
             fused, gate = self.concat(torch.cat((adapted, semantic), dim=-1)), None
         else:
+            if self.gate is None:
+                raise RuntimeError("Gated fusion is not initialized")
             gate = torch.sigmoid(self.gate(torch.cat((adapted, semantic), dim=-1)))
             fused = gate * adapted + (1 - gate) * semantic
         return self.dropout(self.normalization(fused)), gate
@@ -193,10 +202,10 @@ class CornHead(nn.Module):
 class ModernDepressionModel(nn.Module):
     def __init__(
         self,
-        branch_fusion: BranchFusion,
+        branch_fusion: BranchFusion | None,
         interview_encoder: InterviewTransformer,
         regression_head: RegressionHead,
-        ordinal_head: CornHead,
+        ordinal_head: CornHead | None,
     ) -> None:
         super().__init__()
         self.branch_fusion = branch_fusion
@@ -205,13 +214,22 @@ class ModernDepressionModel(nn.Module):
         self.ordinal_head = ordinal_head
 
     def forward(
-        self, adapted_qr: Tensor, semantic_qr: Tensor, qr_mask: Tensor
+        self, adapted_qr: Tensor, semantic_qr: Tensor | None, qr_mask: Tensor
     ) -> dict[str, Tensor | None]:
-        fused, gate = self.branch_fusion(adapted_qr, semantic_qr)
+        if self.branch_fusion is None:
+            if semantic_qr is not None:
+                raise ValueError("Single-branch model received semantic embeddings")
+            fused, gate = adapted_qr, None
+        else:
+            if semantic_qr is None:
+                raise ValueError("Branch fusion requires semantic embeddings")
+            fused, gate = self.branch_fusion(adapted_qr, semantic_qr)
         interview, attention = self.interview_encoder(fused, qr_mask)
         return {
             "prediction": self.regression_head(interview),
-            "ordinal_logits": self.ordinal_head(interview),
+            "ordinal_logits": (
+                self.ordinal_head(interview) if self.ordinal_head is not None else None
+            ),
             "attention": attention,
             "gate": gate,
         }

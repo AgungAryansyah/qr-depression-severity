@@ -89,6 +89,23 @@ def test_fusion_modes_and_branch_dropout() -> None:
     assert torch.all(dropped_semantic > 0)
 
 
+def test_fusion_only_registers_parameters_for_its_active_mode() -> None:
+    average = BranchFusion(4, "average", dropout=0, branch_dropout=0)
+    concat = BranchFusion(4, "concat", dropout=0, branch_dropout=0)
+    vector_gate = BranchFusion(4, "vector_gate", dropout=0, branch_dropout=0)
+
+    assert set(dict(average.named_parameters())) == {
+        "normalization.weight",
+        "normalization.bias",
+    }
+    assert any(name.startswith("concat") for name, _ in concat.named_parameters())
+    assert not any(name.startswith("gate") for name, _ in concat.named_parameters())
+    assert any(name.startswith("gate") for name, _ in vector_gate.named_parameters())
+    assert not any(
+        name.startswith("concat") for name, _ in vector_gate.named_parameters()
+    )
+
+
 def test_cross_attention_qr_fusion_shape() -> None:
     fusion = QrCrossAttentionFusion(embedding_size=4, hidden_size=3, heads=2, dropout=0)
     question = torch.ones(1, 2, 4)
@@ -140,6 +157,24 @@ def test_modern_model_outputs_regression_and_corn_logits() -> None:
 
     assert output["prediction"].shape == (1,)
     assert output["ordinal_logits"].shape == (1, 4)
+
+
+def test_single_branch_model_does_not_create_gate_or_ordinal_head() -> None:
+    model = ModernDepressionModel(
+        None,
+        InterviewTransformer(4, 1, 2, 8, 0, max_qr_pairs=2),
+        RegressionHead(4, 0),
+        None,
+    )
+
+    output = model(torch.ones(1, 1, 4), None, torch.tensor([[True]]))
+
+    assert output["gate"] is None
+    assert output["ordinal_logits"] is None
+    assert not any(
+        name.startswith(("branch_fusion", "ordinal_head"))
+        for name, _ in model.named_parameters()
+    )
 
 
 class _DebertaLikeModel(nn.Module):

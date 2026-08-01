@@ -15,7 +15,7 @@ class ModernQrCollator:
     def __init__(
         self,
         adapted_tokenizer: Tokenizer,
-        semantic_tokenizer: Tokenizer,
+        semantic_tokenizer: Tokenizer | None,
         max_qr_pairs: int,
         max_tokens: int,
     ) -> None:
@@ -31,31 +31,12 @@ class ModernQrCollator:
             raise ValueError(f"Interview exceeds max_qr_pairs={self.max_qr_pairs}")
         questions = [pair.question for example in examples for pair in example.qr_pairs]
         responses = [pair.response for example in examples for pair in example.qr_pairs]
-        semantic_questions, semantic_responses = zip(
-            *(
-                e5_input_texts(question, response)
-                for question, response in zip(questions, responses, strict=True)
-            ),
-            strict=True,
-        )
         result = {
             **self._batch_tokens(
                 "adapted_question", self.adapted_tokenizer, questions, examples
             ),
             **self._batch_tokens(
                 "adapted_response", self.adapted_tokenizer, responses, examples
-            ),
-            **self._batch_tokens(
-                "semantic_question",
-                self.semantic_tokenizer,
-                semantic_questions,
-                examples,
-            ),
-            **self._batch_tokens(
-                "semantic_response",
-                self.semantic_tokenizer,
-                semantic_responses,
-                examples,
             ),
             "qr_mask": self._qr_mask(examples),
             "target": torch.tensor(
@@ -65,6 +46,30 @@ class ModernQrCollator:
                 [example.participant_id for example in examples]
             ),
         }
+        if self.semantic_tokenizer is not None:
+            semantic_questions, semantic_responses = zip(
+                *(
+                    e5_input_texts(question, response)
+                    for question, response in zip(questions, responses, strict=True)
+                ),
+                strict=True,
+            )
+            result.update(
+                self._batch_tokens(
+                    "semantic_question",
+                    self.semantic_tokenizer,
+                    semantic_questions,
+                    examples,
+                )
+            )
+            result.update(
+                self._batch_tokens(
+                    "semantic_response",
+                    self.semantic_tokenizer,
+                    semantic_responses,
+                    examples,
+                )
+            )
         return result
 
     def _batch_tokens(

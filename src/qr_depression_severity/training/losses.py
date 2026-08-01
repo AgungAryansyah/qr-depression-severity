@@ -37,7 +37,7 @@ def corn_loss(logits: Tensor, labels: Tensor) -> Tensor:
 def combined_loss(
     prediction: Tensor,
     target: Tensor,
-    ordinal_logits: Tensor,
+    ordinal_logits: Tensor | None,
     ordinal_weight: float,
     regression: str,
     huber_delta: float,
@@ -48,6 +48,11 @@ def combined_loss(
         regression_loss = functional.huber_loss(prediction, target, delta=huber_delta)
     else:
         raise ValueError(f"Unsupported regression loss: {regression}")
-    ordinal_loss = corn_loss(ordinal_logits, severity_levels(target))
+    if ordinal_weight == 0:
+        ordinal_loss = regression_loss.new_zeros(())
+    elif ordinal_logits is None:
+        raise ValueError("Ordinal logits are required when ordinal loss is enabled")
+    else:
+        ordinal_loss = corn_loss(ordinal_logits, severity_levels(target))
     total = regression_loss + ordinal_weight * ordinal_loss
     return total, {"regression": regression_loss, "ordinal": ordinal_loss}

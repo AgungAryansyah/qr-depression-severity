@@ -55,7 +55,7 @@ class AdaptedEncoderSettings(StrictModel):
 class SemanticEncoderSettings(StrictModel):
     name: str | None = None
     revision: str | None = None
-    enabled: bool | None = None
+    enabled: bool = True
     frozen: bool | None = None
     pooling: Literal["masked_mean", "cls", "attention"] | None = None
     normalize: bool | None = None
@@ -86,10 +86,10 @@ class InterviewEncoderSettings(StrictModel):
 
 
 class HeadSettings(StrictModel):
-    regression_loss: str
+    regression_loss: Literal["mse", "huber"]
     huber_delta: float | None = Field(default=None, gt=0)
-    ordinal_loss: str | None = None
-    ordinal_loss_weight: float | None = Field(default=None, ge=0)
+    ordinal_loss: Literal["corn", "none"] = "corn"
+    ordinal_loss_weight: float = Field(default=0.0, ge=0)
     dropout: float | None = Field(default=None, ge=0, le=1)
 
 
