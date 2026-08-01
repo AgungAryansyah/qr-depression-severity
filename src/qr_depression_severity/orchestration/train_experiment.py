@@ -25,6 +25,7 @@ from qr_depression_severity.training.artifacts import (
     write_tracking_metadata,
     write_train_history,
     write_trainable_parameters,
+    write_warm_start_provenance,
 )
 from qr_depression_severity.training.checkpointing import (
     load_checkpoint,
@@ -34,6 +35,7 @@ from qr_depression_severity.training.optimizer_factory import build_optimizer
 from qr_depression_severity.training.reproducibility import set_seed, validate_precision
 from qr_depression_severity.training.scheduler_factory import build_scheduler
 from qr_depression_severity.training.trainer import Trainer
+from qr_depression_severity.training.warm_start import apply_warm_start
 
 
 @dataclass(frozen=True)
@@ -64,12 +66,16 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
                 config.model.adapted_encoder, "adapted_encoder"
             ).revision,
             "semantic_revision": _semantic_metadata(config, "revision"),
+            "initialization": config.training.initialization.mode,
         },
     )
     tracker = build_tracker(config.tracking, run_dir, config.model_dump(mode="json"))
     write_tracking_metadata(run_dir, tracker.run_metadata())
     try:
         model = build_modern_model(config)
+        warm_start = apply_warm_start(model, config)
+        if warm_start is not None:
+            write_warm_start_provenance(run_dir, warm_start.as_dict())
         device = place_model_on_configured_devices(model, config)
         write_trainable_parameters(run_dir, model)
         adapted_tokenizer, semantic_tokenizer = build_tokenizers(config)

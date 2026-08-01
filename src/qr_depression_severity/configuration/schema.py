@@ -130,6 +130,11 @@ class EarlyStoppingSettings(StrictModel):
     min_delta: float = Field(ge=0)
 
 
+class InitializationSettings(StrictModel):
+    mode: Literal["scratch", "warm_start"] = "scratch"
+    source_checkpoint: Path | None = None
+
+
 class TrainingSettings(StrictModel):
     seed: int
     max_epochs: int = Field(ge=1)
@@ -141,6 +146,9 @@ class TrainingSettings(StrictModel):
     optimizer: OptimizerSettings | None = None
     scheduler: SchedulerSettings | None = None
     early_stopping: EarlyStoppingSettings | None = None
+    initialization: InitializationSettings = Field(
+        default_factory=InitializationSettings
+    )
 
 
 class EvaluationSettings(StrictModel):

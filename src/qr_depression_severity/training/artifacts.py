@@ -55,6 +55,10 @@ def write_tracking_metadata(run_dir: Path, metadata: dict[str, str | None]) -> N
     _write_json(run_dir / "wandb_run.json", metadata)
 
 
+def write_warm_start_provenance(run_dir: Path, provenance: dict[str, object]) -> None:
+    _write_json(run_dir / "warm_start.json", provenance)
+
+
 def write_trainable_parameters(run_dir: Path, model: nn.Module) -> None:
     parameters = list(model.named_parameters())
     trainable = [
