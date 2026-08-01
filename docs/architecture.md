@@ -188,6 +188,30 @@ the process environment or an ignored `.env` file. It creates one run per
 seed, logs epoch-level metrics and artifacts when enabled, and resumes that
 same run for evaluation metrics and prediction artifacts.
 
+## Controlled ablations and warm start
+
+`configs/ablations/core.yaml` defines the core modern study. Screening runs
+each candidate on development with seed 0; confirmation runs five seeds for
+the reference and the screening winner of each axis. The selected configuration
+is the one with the lowest mean development RMSE, with mean MAE and candidate
+ID as deterministic tie-breakers. Only its lowest-development-RMSE checkpoint
+may be evaluated on test.
+
+The warm-start ablation applies the paper's two-stage procedure to the modern
+components. Stage one is adapted-only DeBERTa. Stage two enables frozen E5 and
+average fusion, then copies the compatible DeBERTa/DoRA QR branch, interview
+Transformer, regression head, and CORN head. E5 and fusion parameters start
+newly initialized; stage two uses a new optimizer and scheduler. Source hash,
+epoch, copied tensors, and resolved source configuration are retained in the
+stage-two run artifacts.
+
+Confirmed runs export development predictions for paired absolute- and
+squared-error comparisons against the reference. The study reports bootstrap
+confidence intervals, sign-flip permutation p-values, and
+Benjamini-Hochberg-adjusted p-values. If participant IDs differ after QR
+loading, that seed is excluded from the paired comparison and recorded as a
+warning.
+
 ## Package boundaries
 
 ```text

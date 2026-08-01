@@ -122,6 +122,45 @@ This writes `multiseed_dev.json` with mean/standard-deviation development
 metrics and the checkpoint selected by lowest development RMSE. Test data must
 not be used for model, seed, threshold, or hyperparameter selection.
 
+## Core ablation study
+
+The core modern matrix compares adapted encoder method, semantic-branch
+presence, branch fusion, Transformer depth, regression/ordinal objective, and
+warm start. It does not restore the retired paper reproduction model.
+
+Run the phases in order:
+
+```bash
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/core.yaml --phase screen
+
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/core.yaml --phase confirm
+
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/core.yaml --phase test
+```
+
+Screening runs seed `0` for every candidate and retains the reference plus the
+lowest-development-RMSE candidate for each ablation axis. Confirmation runs
+five seeds for those finalists, selects the configuration by mean development
+RMSE (then MAE), and evaluates its individual best development checkpoint once
+on test.
+
+The warm-start candidate uses the paper's two-stage training idea with modern
+components: an adapted-only DeBERTa model is trained first, then its compatible
+adapted QR branch, interview Transformer, and prediction heads initialize an
+E5 dual-branch average-fusion model. E5 and average-fusion parameters are
+newly initialized, and stage two starts with a fresh optimizer.
+
+The study stores `screening.json`, `confirmation.json`, and `test.json` under
+`outputs/ablations/core-modern`. Confirmation includes paired development-set
+absolute and squared-error comparisons, bootstrap confidence intervals,
+sign-flip permutation p-values, and Benjamini-Hochberg-adjusted p-values.
+Each run also records `data_availability.json`; results remain marked with
+warnings while required transcripts are unavailable or interviews have no QR
+pairs.
+
 Optionally inspect development predictions from a compatible checkpoint:
 
 ```bash
