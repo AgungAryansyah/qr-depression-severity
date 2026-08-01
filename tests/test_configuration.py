@@ -18,7 +18,8 @@ def test_loads_composed_experiment_config() -> None:
     assert config.experiment.name == "modern-dora-e5-transformer"
     assert config.data.dataset == "daic_woz"
     assert config.data.qr_cache.enabled
-    assert config.tracking.backend == "disabled"
+    assert config.tracking.backend == "wandb"
+    assert config.tracking.mode == "online"
     assert config.tracking.console
     assert config.training.batch_size == 8
     assert config.model.adapted_encoder is not None

@@ -22,6 +22,9 @@ def test_evaluator_writes_predictions_and_blocks_repeated_test(
     config = base_config.model_copy(
         update={
             "training": base_config.training.model_copy(update={"precision": "fp32"}),
+            "tracking": base_config.tracking.model_copy(
+                update={"backend": "disabled", "mode": "disabled"}
+            ),
             "model": base_config.model.model_copy(
                 update={
                     "execution": base_config.model.execution.model_copy(

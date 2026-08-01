@@ -182,11 +182,10 @@ accuracy, macro-F1, quadratic weighted kappa, and severity-level MAE.
 
 ## Tracking and artifacts
 
-`configs/tracking/global.yaml` is the tracking policy for every experiment.
-It defaults to disabled. To enable W&B globally, change its `extends` value to
-`wandb_online.yaml`; normal training, five-seed runs, and every ablation
-candidate will then use W&B. API keys belong only in the Git-ignored `.env`,
-never YAML, resolved configuration, or run artifacts:
+`configs/tracking/global.yaml` enables online W&B tracking for every experiment,
+including normal training, five-seed runs, and every ablation candidate. Change
+its `extends` value to `disabled.yaml` to turn tracking off. API keys belong only
+in the Git-ignored `.env`, never YAML, resolved configuration, or run artifacts:
 
 ```bash
 cp .env.example .env

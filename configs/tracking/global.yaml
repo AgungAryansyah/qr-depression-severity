@@ -1,1 +1,1 @@
-extends: disabled.yaml
+extends: wandb_online.yaml
