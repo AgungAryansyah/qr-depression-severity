@@ -185,21 +185,28 @@ accuracy, macro-F1, quadratic weighted kappa, and severity-level MAE.
 
 ## Tracking and artifacts
 
-Configure `tracking.backend` as `disabled`, `local`, or `wandb`; W&B modes are
-`online` or `offline`. W&B API keys belong only in the Git-ignored `.env`, never
-YAML, resolved configuration, or run artifacts:
+`configs/tracking/global.yaml` is the tracking policy for every experiment.
+It defaults to disabled. To enable W&B globally, change its `extends` value to
+`wandb_online.yaml`; normal training, five-seed runs, and every ablation
+candidate will then use W&B. API keys belong only in the Git-ignored `.env`,
+never YAML, resolved configuration, or run artifacts:
 
 ```bash
 cp .env.example .env
 # Set WANDB_API_KEY in .env.
 uv run python scripts/train.py \
-  --config configs/experiments/modern/deberta_dora_e5_transformer_wandb.yaml
+  --config configs/experiments/modern/deberta_dora_e5_transformer.yaml
 ```
 
 An exported `WANDB_API_KEY` takes precedence over `.env`. Online tracking fails
 before model construction when no key is configured. Five-seed runs share a
 group and receive distinct seed run names. Other W&B initialization failures
 fall back to local artifacts with a recorded warning.
+
+W&B automatically tags the selected adapted encoder and adaptation method,
+semantic encoder state, QR and branch fusion, interview encoder, and losses.
+All ablation candidates share the study group, while each candidate, stage, and
+seed has its own named run for direct comparison.
 
 Trackers receive one event per completed epoch, containing train/development
 losses, RMSE, MAE, MSE, signed mean error, maximum absolute error, ordinal
