@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean, stdev
 
+from qr_depression_severity.analysis.ablation_statistics import (
+    apply_benjamini_hochberg,
+    paired_error_statistics,
+)
 from qr_depression_severity.configuration.ablation import (
     AblationCandidate,
     AblationStudyConfig,
@@ -90,8 +94,10 @@ def _confirm(study: AblationStudyConfig) -> AblationPhaseResult:
             study, candidates[candidate_id], study.study.confirmation_seeds, "confirm"
         )
     )
-    summaries = _candidate_summaries(runs)
+    prediction_paths = _export_dev_predictions(runs)
+    summaries = _candidate_summaries(runs, prediction_paths)
     winner = _select_confirmed_winner(summaries)
+    comparisons = _paired_statistics(study, summaries)
     summary_path = _study_dir(study) / "confirmation.json"
     _write_json(
         summary_path,
@@ -100,6 +106,7 @@ def _confirm(study: AblationStudyConfig) -> AblationPhaseResult:
             "study": study.study.name,
             "candidates": summaries,
             "winner": winner,
+            "paired_statistics": comparisons,
             "warnings": _data_warnings(runs),
         },
     )
@@ -254,7 +261,9 @@ def _select_screen_finalists(
     return [candidate.id for candidate in study.candidates if candidate.id in finalists]
 
 
-def _candidate_summaries(runs: tuple[CandidateRun, ...]) -> list[dict[str, object]]:
+def _candidate_summaries(
+    runs: tuple[CandidateRun, ...], prediction_paths: dict[tuple[str, int], Path]
+) -> list[dict[str, object]]:
     summaries = []
     for candidate_id in sorted({run.candidate_id for run in runs}):
         candidate_runs = tuple(run for run in runs if run.candidate_id == candidate_id)
@@ -275,12 +284,81 @@ def _candidate_summaries(runs: tuple[CandidateRun, ...]) -> list[dict[str, objec
                 "candidate_id": candidate_id,
                 "axis": candidate_runs[0].axis,
                 "development": metrics,
-                "runs": [_run_payload(run) for run in candidate_runs],
+                "runs": [
+                    _run_payload(run, prediction_paths[(run.candidate_id, run.seed)])
+                    for run in candidate_runs
+                ],
                 "selected_checkpoint": str(selected.run_dir / "best_checkpoint.pt"),
                 "selected_config": str(selected.run_dir / "config.resolved.yaml"),
             }
         )
     return summaries
+
+
+def _export_dev_predictions(
+    runs: tuple[CandidateRun, ...],
+) -> dict[tuple[str, int], Path]:
+    predictions = {}
+    for run in runs:
+        checkpoint = run.run_dir / "best_checkpoint.pt"
+        config_path = run.run_dir / "config.resolved.yaml"
+        result = evaluate_checkpoint(
+            load_experiment_config(config_path), checkpoint, "dev"
+        )
+        predictions[(run.candidate_id, run.seed)] = result.predictions_path
+    return predictions
+
+
+def _paired_statistics(
+    study: AblationStudyConfig, summaries: list[dict[str, object]]
+) -> dict[str, dict[str, object]]:
+    reference_id = next(
+        candidate.id for candidate in study.candidates if candidate.reference
+    )
+    summaries_by_id = {
+        _required_str(summary, "candidate_id"): summary for summary in summaries
+    }
+    reference = summaries_by_id.get(reference_id)
+    if reference is None:
+        raise ValueError("Confirmation results lack the reference candidate")
+    reference_paths = _prediction_paths(reference)
+    comparisons = {
+        candidate_id: paired_error_statistics(
+            reference_paths,
+            _prediction_paths(summary),
+            study.study.bootstrap_samples,
+            study.study.permutation_samples,
+            study.study.significance_seed + index,
+        )
+        for index, (candidate_id, summary) in enumerate(sorted(summaries_by_id.items()))
+        if candidate_id != reference_id
+    }
+    apply_benjamini_hochberg(comparisons)
+    for candidate_id, comparison in comparisons.items():
+        if comparison.get("status") == "no_aligned_predictions":
+            warnings.warn(
+                f"Excluded {candidate_id} from paired statistics: "
+                "no aligned predictions",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+    return comparisons
+
+
+def _prediction_paths(summary: dict[str, object]) -> dict[int, Path]:
+    runs = summary.get("runs")
+    if not isinstance(runs, list):
+        raise ValueError("Candidate summary lacks runs")
+    paths = {}
+    for run in runs:
+        if not isinstance(run, dict):
+            raise ValueError("Candidate summary run is invalid")
+        seed = run.get("seed")
+        prediction_path = run.get("dev_predictions")
+        if not isinstance(seed, int) or not isinstance(prediction_path, str):
+            raise ValueError("Candidate summary lacks development predictions")
+        paths[seed] = Path(prediction_path)
+    return paths
 
 
 def _select_confirmed_winner(summaries: list[dict[str, object]]) -> dict[str, object]:
@@ -326,7 +404,9 @@ def _data_warnings(runs: tuple[CandidateRun, ...]) -> list[str]:
     return sorted(set(warnings_found))
 
 
-def _run_payload(run: CandidateRun) -> dict[str, object]:
+def _run_payload(
+    run: CandidateRun, dev_predictions: Path | None = None
+) -> dict[str, object]:
     return {
         "candidate_id": run.candidate_id,
         "axis": run.axis,
@@ -335,6 +415,9 @@ def _run_payload(run: CandidateRun) -> dict[str, object]:
         "dev_metrics": run.dev_metrics,
         "effective_split_ids": run.effective_split_ids,
         "source_run_dir": str(run.source_run_dir) if run.source_run_dir else None,
+        "dev_predictions": (
+            str(dev_predictions) if dev_predictions is not None else None
+        ),
     }
 
 

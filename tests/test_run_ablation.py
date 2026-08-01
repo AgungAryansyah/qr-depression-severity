@@ -41,8 +41,15 @@ def test_study_screens_confirms_and_tests_selected_checkpoint(
         )
 
     def evaluate(config, checkpoint, split):
-        assert split == "test"
-        return EvaluationResult(split, {"rmse": 1.0}, checkpoint.parent / "test.csv")
+        prediction_path = checkpoint.parent / f"{split}.csv"
+        if split == "dev":
+            prediction_path.write_text(
+                "participant_id,prediction,target\n1,1.0,1.0\n2,2.0,3.0\n",
+                encoding="utf-8",
+            )
+        else:
+            assert split == "test"
+        return EvaluationResult(split, {"rmse": 1.0}, prediction_path)
 
     monkeypatch.setattr(ablation_module, "train_experiment", train)
     monkeypatch.setattr(ablation_module, "evaluate_checkpoint", evaluate)
@@ -54,6 +61,7 @@ def test_study_screens_confirms_and_tests_selected_checkpoint(
     assert screen.summary_path.is_file()
     assert confirm.selected_checkpoint is not None
     assert test.summary_path.is_file()
+    assert "paired_statistics" in confirm.summary_path.read_text(encoding="utf-8")
     assert any(
         "warm-average-stage-one" in config.experiment.name for config in received
     )

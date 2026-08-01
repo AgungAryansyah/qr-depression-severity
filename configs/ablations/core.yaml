@@ -3,6 +3,9 @@ study:
   output_dir: outputs/ablations
   screening_seeds: [0]
   confirmation_seeds: [0, 1, 2, 3, 4]
+  bootstrap_samples: 10000
+  permutation_samples: 10000
+  significance_seed: 2026
 candidates:
   - id: reference
     axis: reference

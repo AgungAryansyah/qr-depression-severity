@@ -12,6 +12,9 @@ class AblationStudySettings(StrictModel):
     output_dir: Path
     screening_seeds: tuple[int, ...] = (0,)
     confirmation_seeds: tuple[int, ...]
+    bootstrap_samples: int = Field(ge=1)
+    permutation_samples: int = Field(ge=1)
+    significance_seed: int
 
 
 class AblationCandidate(StrictModel):
