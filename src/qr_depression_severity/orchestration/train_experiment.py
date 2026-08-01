@@ -155,15 +155,13 @@ def _train_epochs(
     stale_epochs = 0
     history: list[dict[str, float | int]] = []
     checkpoint = run_dir / "best_checkpoint.pt"
-    step = 0
     for epoch in range(1, config.training.max_epochs + 1):
         if config.tracking.console:
             print(f"Epoch {epoch}/{config.training.max_epochs}: train", flush=True)
-        train_metrics = trainer.run_epoch(train_loader, True, step)
-        step += len(train_loader)
+        train_metrics = trainer.run_epoch(train_loader, True)
         if config.tracking.console:
             print(f"Epoch {epoch}/{config.training.max_epochs}: dev", flush=True)
-        dev_metrics = trainer.run_epoch(dev_loader, False, step)
+        dev_metrics = trainer.run_epoch(dev_loader, False)
         epoch_metrics = {
             "epoch": epoch,
             **{f"train_{name}": value for name, value in train_metrics.items()},
@@ -171,20 +169,19 @@ def _train_epochs(
         }
         trainer.tracker.log_metrics(
             {
-                name: float(value)
-                for name, value in epoch_metrics.items()
-                if name != "epoch"
+                **{
+                    name: float(value)
+                    for name, value in epoch_metrics.items()
+                    if name != "epoch"
+                },
+                **{
+                    f"learning_rate/{group.get('name', f'group_{index}')}": float(
+                        group["lr"]
+                    )
+                    for index, group in enumerate(optimizer.param_groups)
+                },
             },
-            step,
-        )
-        trainer.tracker.log_metrics(
-            {
-                f"learning_rate/{group.get('name', f'group_{index}')}": float(
-                    group["lr"]
-                )
-                for index, group in enumerate(optimizer.param_groups)
-            },
-            step,
+            epoch,
         )
         history.append(epoch_metrics)
         if config.tracking.console:

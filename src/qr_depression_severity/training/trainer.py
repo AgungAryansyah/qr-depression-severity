@@ -46,7 +46,7 @@ class Trainer:
         )
 
     def run_epoch(
-        self, batches: Iterable[Mapping[str, Tensor]], training: bool, step: int
+        self, batches: Iterable[Mapping[str, Tensor]], training: bool
     ) -> dict[str, float]:
         self.model.train(training)
         predictions: list[Tensor] = []
@@ -86,13 +86,6 @@ class Trainer:
             batch_count += 1
             predictions.append(outputs["prediction"].detach())
             targets.append(target.detach())
-            self.tracker.log_metrics(
-                {
-                    f"{'train' if training else 'dev'}_{name}": value.item()
-                    for name, value in {"loss": loss, **parts}.items()
-                },
-                step + batch_count,
-            )
             if self.console and batch_count % self.console_every_n_batches == 0:
                 total = str(total_batches) if total_batches is not None else "?"
                 phase = "train" if training else "dev"

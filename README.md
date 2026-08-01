@@ -162,6 +162,10 @@ before model construction when no key is configured. Five-seed runs share a
 group and receive distinct seed run names. Other W&B initialization failures
 fall back to local artifacts with a recorded warning.
 
+Trackers receive one event per completed epoch, containing train/development
+losses, RMSE, MAE, MSE, signed mean error, maximum absolute error, ordinal
+metrics, and optimizer learning rates. Console batch progress remains local.
+
 Evaluation with the W&B configuration resumes the checkpoint's original W&B
 run, logs the selected development or approved test metrics, and uploads the
 prediction CSV when `tracking.log_predictions` is enabled.

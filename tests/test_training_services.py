@@ -12,7 +12,10 @@ from qr_depression_severity.training.checkpointing import (
     save_checkpoint,
 )
 from qr_depression_severity.training.losses import combined_loss, severity_levels
-from qr_depression_severity.training.metrics import quadratic_weighted_kappa
+from qr_depression_severity.training.metrics import (
+    quadratic_weighted_kappa,
+    regression_metrics,
+)
 from qr_depression_severity.training.optimizer_factory import build_optimizer
 from qr_depression_severity.training.reproducibility import set_seed, validate_precision
 from qr_depression_severity.training.scheduler_factory import build_scheduler
@@ -36,6 +39,20 @@ def test_severity_boundaries_and_combined_loss() -> None:
     assert set(parts) == {"regression", "ordinal"}
 
 
+def test_regression_error_diagnostics() -> None:
+    metrics = regression_metrics(torch.tensor([3.0, -1.0]), torch.tensor([1.0, 3.0]))
+
+    assert metrics == pytest.approx(
+        {
+            "rmse": 10**0.5,
+            "mae": 3.0,
+            "mse": 10.0,
+            "mean_error": -1.0,
+            "max_absolute_error": 4.0,
+        }
+    )
+
+
 def test_trainer_checkpoint_and_local_history(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -48,7 +65,7 @@ def test_trainer_checkpoint_and_local_history(
     trainer = Trainer(model, optimizer, tracker, "huber", 2.0, 0.5, 1.0, console=True)
     batch = {"features": torch.ones(2, 1), "target": torch.tensor([1.0, 8.0])}
 
-    metrics = trainer.run_epoch([batch], training=True, step=0)
+    metrics = trainer.run_epoch([batch], training=True)
     checkpoint = tmp_path / "best_checkpoint.pt"
     save_checkpoint(checkpoint, model, optimizer, config, epoch=1)
     assert load_checkpoint(checkpoint, model, optimizer, config) == 1
@@ -58,12 +75,16 @@ def test_trainer_checkpoint_and_local_history(
         "loss",
         "rmse",
         "mae",
+        "mse",
+        "mean_error",
+        "max_absolute_error",
         "severity_accuracy",
         "severity_macro_f1",
         "severity_mae",
         "quadratic_weighted_kappa",
     }
     assert (tmp_path / "tracker_events.json").is_file()
+    assert tracker.events == []
     assert "train batch 1/1" in capsys.readouterr().out
 
 

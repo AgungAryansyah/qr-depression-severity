@@ -11,6 +11,9 @@ def regression_metrics(predictions: Tensor, targets: Tensor) -> dict[str, float]
     return {
         "rmse": errors.square().mean().sqrt().item(),
         "mae": errors.abs().mean().item(),
+        "mse": errors.square().mean().item(),
+        "mean_error": errors.mean().item(),
+        "max_absolute_error": errors.abs().max().item(),
     }
 
 

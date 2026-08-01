@@ -83,6 +83,9 @@ def test_evaluator_resumes_wandb_run_and_logs_predictions(
     assert set(tracker.metrics[0]) == {
         "test_rmse",
         "test_mae",
+        "test_mse",
+        "test_mean_error",
+        "test_max_absolute_error",
         "test_severity_accuracy",
         "test_severity_macro_f1",
         "test_severity_mae",
