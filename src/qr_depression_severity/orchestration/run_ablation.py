@@ -42,6 +42,10 @@ class AblationPhaseResult:
 
 
 def run_ablation_study(study: AblationStudyConfig, phase: str) -> AblationPhaseResult:
+    if phase == "all":
+        _screen(study)
+        _confirm(study)
+        return _test(study)
     if phase == "screen":
         return _screen(study)
     if phase == "confirm":

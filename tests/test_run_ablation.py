@@ -55,14 +55,11 @@ def test_study_screens_confirms_and_tests_selected_checkpoint(
     monkeypatch.setattr(ablation_module, "train_experiment", train)
     monkeypatch.setattr(ablation_module, "evaluate_checkpoint", evaluate)
 
-    screen = ablation_module.run_ablation_study(study, "screen")
-    confirm = ablation_module.run_ablation_study(study, "confirm")
-    test = ablation_module.run_ablation_study(study, "test")
+    result = ablation_module.run_ablation_study(study, "all")
 
-    assert screen.summary_path.is_file()
-    assert confirm.selected_checkpoint is not None
-    assert test.summary_path.is_file()
-    assert "paired_statistics" in confirm.summary_path.read_text(encoding="utf-8")
+    assert result.summary_path.is_file()
+    confirmation_path = tmp_path / "core-modern" / "confirmation.json"
+    assert "paired_statistics" in confirmation_path.read_text(encoding="utf-8")
     assert any(
         "warm-average-stage-one" in config.experiment.name for config in received
     )

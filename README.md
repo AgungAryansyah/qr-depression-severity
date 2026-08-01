@@ -128,18 +128,15 @@ The core modern matrix compares adapted encoder method, semantic-branch
 presence, branch fusion, Transformer depth, regression/ordinal objective, and
 warm start. It does not restore the retired paper reproduction model.
 
-Run the phases in order:
+Run the complete study:
 
 ```bash
 uv run python scripts/run_ablation.py \
-  --config configs/ablations/core.yaml --phase screen
-
-uv run python scripts/run_ablation.py \
-  --config configs/ablations/core.yaml --phase confirm
-
-uv run python scripts/run_ablation.py \
-  --config configs/ablations/core.yaml --phase test
+  --config configs/ablations/core.yaml
 ```
+
+Use `--phase screen`, `--phase confirm`, or `--phase test` only to recover an
+interrupted study.
 
 Screening runs seed `0` for every candidate and retains the reference plus the
 lowest-development-RMSE candidate for each ablation axis. Confirmation runs
