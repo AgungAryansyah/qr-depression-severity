@@ -55,8 +55,3 @@ training:
   early_stopping:
     monitor: dev_rmse
     patience: 1
-tracking:
-  backend: local
-  mode: disabled
-  console: true
-  console_every_n_batches: 1

@@ -23,6 +23,9 @@ def test_train_experiment_writes_a_best_checkpoint(monkeypatch, tmp_path: Path) 
             "training": config.training.model_copy(
                 update={"precision": "fp32", "max_epochs": 2}
             ),
+            "tracking": config.tracking.model_copy(
+                update={"backend": "local", "mode": "disabled"}
+            ),
             "model": config.model.model_copy(
                 update={
                     "execution": config.model.execution.model_copy(

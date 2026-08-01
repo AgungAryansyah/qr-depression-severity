@@ -1,3 +1,4 @@
+extends: tracking/global.yaml
 experiment:
   name: base
   output_dir: outputs
@@ -43,6 +44,3 @@ training:
     min_delta: 0.0
 evaluation:
   metrics: [rmse, mae, accuracy, macro_f1, quadratic_weighted_kappa]
-tracking:
-  backend: disabled
-  mode: disabled

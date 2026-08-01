@@ -1,0 +1,17 @@
+tracking:
+  backend: wandb
+  mode: online
+  project: qr-depression-severity
+  entity: null
+  group: null
+  run_name: null
+  job_type: train
+  tags: [daic-woz]
+  log_model: true
+  log_predictions: true
+  log_attention: false
+  watch_model: false
+  console: true
+  console_every_n_batches: 1
+  dotenv_path: .env
+  api_key_env: WANDB_API_KEY
