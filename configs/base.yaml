@@ -22,7 +22,7 @@ model:
 training:
   seed: 0
   max_epochs: 100
-  batch_size: 1
+  batch_size: 8
   gradient_accumulation_steps: 1
   precision: bf16
   deterministic: true

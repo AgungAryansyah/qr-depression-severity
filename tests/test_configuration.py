@@ -20,6 +20,7 @@ def test_loads_composed_experiment_config() -> None:
     assert config.data.qr_cache.enabled
     assert config.tracking.backend == "disabled"
     assert config.tracking.console
+    assert config.training.batch_size == 8
     assert config.model.adapted_encoder is not None
     assert config.model.adapted_encoder.method == "dora"
     assert config.model.adapted_encoder.gradient_checkpointing
