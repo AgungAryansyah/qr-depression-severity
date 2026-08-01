@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import torch
@@ -59,6 +60,8 @@ def test_train_experiment_writes_a_best_checkpoint(monkeypatch, tmp_path: Path) 
     assert (result.run_dir / "metrics.json").is_file()
     assert (result.run_dir / "trainable_parameters.txt").is_file()
     assert (result.run_dir / "wandb_run.json").is_file()
+    tracker_events = json.loads((result.run_dir / "tracker_events.json").read_text())
+    assert "learning_rate/group_0" in tracker_events[-1]
 
 
 def _interviews(settings: object, split: str) -> list[InterviewExample]:

@@ -177,6 +177,15 @@ def _train_epochs(
             },
             step,
         )
+        trainer.tracker.log_metrics(
+            {
+                f"learning_rate/{group.get('name', f'group_{index}')}": float(
+                    group["lr"]
+                )
+                for index, group in enumerate(optimizer.param_groups)
+            },
+            step,
+        )
         history.append(epoch_metrics)
         if config.tracking.console:
             print(

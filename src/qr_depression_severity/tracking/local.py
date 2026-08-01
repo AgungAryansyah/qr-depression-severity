@@ -10,7 +10,9 @@ class LocalTracker:
         self.fallback_reason = fallback_reason
         self.events: list[dict[str, float | int]] = []
 
-    def log_metrics(self, metrics: dict[str, float], step: int) -> None:
+    def log_metrics(self, metrics: dict[str, float], step: int | None = None) -> None:
+        if step is None:
+            step = len(self.events)
         self.events.append({"step": step, **metrics})
 
     def log_artifact(self, path: Path, artifact_type: str) -> None:
@@ -27,7 +29,7 @@ class LocalTracker:
 
 
 class DisabledTracker:
-    def log_metrics(self, metrics: dict[str, float], step: int) -> None:
+    def log_metrics(self, metrics: dict[str, float], step: int | None = None) -> None:
         return None
 
     def log_artifact(self, path: Path, artifact_type: str) -> None:

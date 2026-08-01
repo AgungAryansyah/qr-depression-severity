@@ -43,8 +43,11 @@ class WandbTracker:
             init_options.update({"id": run_id, "resume": "must"})
         self.run = wandb.init(**init_options)
 
-    def log_metrics(self, metrics: dict[str, float], step: int) -> None:
-        self.run.log(metrics, step=step)
+    def log_metrics(self, metrics: dict[str, float], step: int | None = None) -> None:
+        if step is None:
+            self.run.log(metrics)
+        else:
+            self.run.log(metrics, step=step)
 
     def log_artifact(self, path: Path, artifact_type: str) -> None:
         artifact = self.wandb.Artifact(path.name, type=artifact_type)

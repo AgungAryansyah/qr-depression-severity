@@ -19,6 +19,8 @@ from qr_depression_severity.models.factory import (
     build_tokenizers,
     place_model_on_configured_devices,
 )
+from qr_depression_severity.tracking import build_tracker
+from qr_depression_severity.tracking.base import ExperimentTracker
 from qr_depression_severity.training.checkpointing import load_model_checkpoint
 from qr_depression_severity.training.metrics import ordinal_metrics, regression_metrics
 from qr_depression_severity.training.reproducibility import validate_precision
@@ -41,31 +43,66 @@ def evaluate_checkpoint(
         raise FileExistsError(
             f"Test predictions already exist for this checkpoint: {predictions_path}"
         )
+    tracker = _evaluation_tracker(config, checkpoint)
     precision = validate_precision(config.training.precision)
-    validate_daic_woz(config.data)
-    model = build_modern_model(config)
-    device = place_model_on_configured_devices(model, config)
-    load_model_checkpoint(checkpoint, model, config)
-    adapted_tokenizer, semantic_tokenizer = build_tokenizers(config)
-    loader = DataLoader(
-        load_interviews(config.data, split),
-        batch_size=config.training.batch_size,
-        shuffle=False,
-        collate_fn=ModernQrCollator(
-            adapted_tokenizer,
-            semantic_tokenizer,
-            config.data.max_qr_pairs,
-            config.data.max_tokens,
-        ),
+    try:
+        validate_daic_woz(config.data)
+        model = build_modern_model(config)
+        device = place_model_on_configured_devices(model, config)
+        load_model_checkpoint(checkpoint, model, config)
+        adapted_tokenizer, semantic_tokenizer = build_tokenizers(config)
+        loader = DataLoader(
+            load_interviews(config.data, split),
+            batch_size=config.training.batch_size,
+            shuffle=False,
+            collate_fn=ModernQrCollator(
+                adapted_tokenizer,
+                semantic_tokenizer,
+                config.data.max_qr_pairs,
+                config.data.max_tokens,
+            ),
+        )
+        participant_ids, predictions, targets = _predict(
+            model, loader, device, precision
+        )
+        metrics = {
+            **regression_metrics(predictions, targets),
+            **ordinal_metrics(predictions, targets),
+        }
+        _write_predictions(predictions_path, participant_ids, predictions, targets)
+        _write_metrics(checkpoint.parent / f"{split}_metrics.json", metrics)
+        if tracker is not None:
+            tracker.log_metrics(
+                {f"{split}_{name}": value for name, value in metrics.items()}
+            )
+            if config.tracking.log_predictions:
+                tracker.log_artifact(predictions_path, "predictions")
+        return EvaluationResult(split, metrics, predictions_path)
+    finally:
+        if tracker is not None:
+            tracker.finish()
+
+
+def _evaluation_tracker(
+    config: ExperimentConfig, checkpoint: Path
+) -> ExperimentTracker | None:
+    if config.tracking.backend != "wandb":
+        return None
+    metadata_path = checkpoint.parent / "wandb_run.json"
+    try:
+        with metadata_path.open(encoding="utf-8") as stream:
+            metadata = json.load(stream)
+        run_id = metadata["id"]
+    except (FileNotFoundError, KeyError, TypeError, json.JSONDecodeError) as error:
+        raise ValueError(
+            "W&B evaluation requires wandb_run.json from the training run"
+        ) from error
+    if metadata.get("backend") != "wandb" or not isinstance(run_id, str) or not run_id:
+        raise ValueError("Checkpoint was not produced by a W&B training run")
+    tracker = build_tracker(
+        config.tracking, checkpoint.parent, config.model_dump(mode="json"), run_id
     )
-    participant_ids, predictions, targets = _predict(model, loader, device, precision)
-    metrics = {
-        **regression_metrics(predictions, targets),
-        **ordinal_metrics(predictions, targets),
-    }
-    _write_predictions(predictions_path, participant_ids, predictions, targets)
-    _write_metrics(checkpoint.parent / f"{split}_metrics.json", metrics)
-    return EvaluationResult(split, metrics, predictions_path)
+    return tracker if tracker.run_metadata()["backend"] == "wandb" else None
 
 
 def _predict(

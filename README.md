@@ -162,6 +162,10 @@ before model construction when no key is configured. Five-seed runs share a
 group and receive distinct seed run names. Other W&B initialization failures
 fall back to local artifacts with a recorded warning.
 
+Evaluation with the W&B configuration resumes the checkpoint's original W&B
+run, logs the selected development or approved test metrics, and uploads the
+prediction CSV when `tracking.log_predictions` is enabled.
+
 Each seed directory contains:
 
 ```text
