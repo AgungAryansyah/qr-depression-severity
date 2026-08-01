@@ -1,5 +1,6 @@
 """One-seed modern-model training orchestration."""
 
+import warnings
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from math import ceil
@@ -12,7 +13,7 @@ from torch.utils.data import DataLoader
 from qr_depression_severity.configuration.schema import ExperimentConfig
 from qr_depression_severity.data.collators import ModernQrCollator
 from qr_depression_severity.data.loading import load_interviews
-from qr_depression_severity.data.splits import validate_daic_woz
+from qr_depression_severity.data.splits import EXPECTED_SPLIT_COUNTS, validate_daic_woz
 from qr_depression_severity.models.factory import (
     build_modern_model,
     build_tokenizers,
@@ -21,6 +22,7 @@ from qr_depression_severity.models.factory import (
 from qr_depression_severity.tracking import build_tracker
 from qr_depression_severity.training.artifacts import (
     initialize_run_artifacts,
+    write_data_availability,
     write_metrics,
     write_tracking_metadata,
     write_train_history,
@@ -43,6 +45,7 @@ class TrainingResult:
     run_dir: Path
     best_epoch: int
     dev_metrics: dict[str, float]
+    effective_split_ids: dict[str, tuple[int, ...]] | None = None
 
 
 def train_experiment(config: ExperimentConfig) -> TrainingResult:
@@ -87,6 +90,15 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
         )
         train_loader = _data_loader(config, collator, "train", shuffle=True)
         dev_loader = _data_loader(config, collator, "dev", shuffle=False)
+        effective_split_ids = _effective_split_ids(
+            splits.participant_ids, train_loader, dev_loader
+        )
+        write_data_availability(
+            run_dir,
+            splits.participant_ids,
+            effective_split_ids,
+            EXPECTED_SPLIT_COUNTS,
+        )
         optimizer = build_optimizer(
             model, _require(config.training.optimizer, "optimizer")
         )
@@ -116,7 +128,14 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
             config.tracking.console_every_n_batches,
         )
         return _train_epochs(
-            config, trainer, model, optimizer, train_loader, dev_loader, run_dir
+            config,
+            trainer,
+            model,
+            optimizer,
+            train_loader,
+            dev_loader,
+            run_dir,
+            effective_split_ids,
         )
     finally:
         tracker.finish()
@@ -146,6 +165,7 @@ def _train_epochs(
     train_loader: DataLoader,
     dev_loader: DataLoader,
     run_dir: Path,
+    effective_split_ids: dict[str, tuple[int, ...]],
 ) -> TrainingResult:
     early_stopping = _require(config.training.early_stopping, "early_stopping")
     if early_stopping.monitor != "dev_rmse":
@@ -214,7 +234,7 @@ def _train_epochs(
     write_metrics(
         run_dir, {f"dev_{name}": value for name, value in best_metrics.items()}
     )
-    return TrainingResult(run_dir, best_epoch, best_metrics)
+    return TrainingResult(run_dir, best_epoch, best_metrics, effective_split_ids)
 
 
 def _run_dir(config: ExperimentConfig) -> Path:
@@ -246,3 +266,32 @@ def _semantic_metadata(config: ExperimentConfig, field: str) -> str | None:
     if semantic is None or not semantic.enabled:
         return None
     return getattr(semantic, field)
+
+
+def _effective_split_ids(
+    available_ids: dict[str, tuple[int, ...]],
+    train_loader: DataLoader,
+    dev_loader: DataLoader,
+) -> dict[str, tuple[int, ...]]:
+    loaded = {
+        "train": tuple(example.participant_id for example in train_loader.dataset),
+        "dev": tuple(example.participant_id for example in dev_loader.dataset),
+        "test": available_ids["test"],
+    }
+    missing = {
+        split: tuple(
+            participant_id
+            for participant_id in available_ids[split]
+            if participant_id not in loaded[split]
+        )
+        for split in available_ids
+    }
+    for split, participant_ids in missing.items():
+        if participant_ids:
+            warnings.warn(
+                f"{split} excludes participants after QR loading: "
+                f"{list(participant_ids)}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+    return loaded

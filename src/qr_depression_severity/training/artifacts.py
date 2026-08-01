@@ -59,6 +59,34 @@ def write_warm_start_provenance(run_dir: Path, provenance: dict[str, object]) ->
     _write_json(run_dir / "warm_start.json", provenance)
 
 
+def write_data_availability(
+    run_dir: Path,
+    available_ids: dict[str, tuple[int, ...]],
+    loaded_ids: dict[str, tuple[int, ...]],
+    expected_counts: dict[str, int],
+) -> None:
+    skipped_ids = {
+        split: tuple(
+            participant_id
+            for participant_id in available_ids[split]
+            if participant_id not in loaded_ids[split]
+        )
+        for split in available_ids
+    }
+    _write_json(
+        run_dir / "data_availability.json",
+        {
+            "available_ids": available_ids,
+            "loaded_ids": loaded_ids,
+            "skipped_ids": skipped_ids,
+            "data_incomplete": any(
+                len(loaded_ids[split]) != expected_counts[split]
+                for split in expected_counts
+            ),
+        },
+    )
+
+
 def write_trainable_parameters(run_dir: Path, model: nn.Module) -> None:
     parameters = list(model.named_parameters())
     trainable = [

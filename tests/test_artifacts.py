@@ -10,6 +10,7 @@ from qr_depression_severity.configuration.loader import load_experiment_config
 from qr_depression_severity.tracking.wandb_tracker import WandbAuthenticationError
 from qr_depression_severity.training.artifacts import (
     initialize_run_artifacts,
+    write_data_availability,
     write_metrics,
 )
 
@@ -33,6 +34,20 @@ def test_writes_modern_artifacts(tmp_path: Path) -> None:
     assert (tmp_path / "environment.json").is_file()
     assert (tmp_path / "environment.txt").is_file()
     assert (tmp_path / "metrics.json").is_file()
+
+
+def test_writes_effective_data_availability(tmp_path: Path) -> None:
+    write_data_availability(
+        tmp_path,
+        {"train": (300, 301), "dev": (302,), "test": (303,)},
+        {"train": (300,), "dev": (302,), "test": (303,)},
+        {"train": 2, "dev": 1, "test": 1},
+    )
+
+    report = (tmp_path / "data_availability.json").read_text(encoding="utf-8")
+
+    assert '"data_incomplete": true' in report
+    assert '"skipped_ids"' in report
 
 
 def test_wandb_setup_failure_falls_back_to_local_artifacts(
