@@ -22,6 +22,8 @@ def test_loads_composed_experiment_config() -> None:
     assert config.tracking.mode == "online"
     assert config.tracking.console
     assert config.training.batch_size == 8
+    assert config.model.qr_fusion is not None
+    assert config.model.qr_fusion.intermediate_size == 1536
     assert config.model.adapted_encoder is not None
     assert config.model.adapted_encoder.method == "dora"
     assert config.model.adapted_encoder.gradient_checkpointing
@@ -98,3 +100,13 @@ def test_loads_core_ablation_study_with_resolved_candidate_paths() -> None:
     )
     assert warm_start.warm_start_source_config is not None
     assert warm_start.warm_start_source_config.is_file()
+
+
+def test_loads_compact_qr_fusion_configuration() -> None:
+    config = load_experiment_config(
+        Path("configs/experiments/modern/deberta_dora_e5_transformer_compact.yaml")
+    )
+
+    assert config.experiment.name == "modern-dora-e5-transformer-compact"
+    assert config.model.qr_fusion is not None
+    assert config.model.qr_fusion.intermediate_size == 512

@@ -64,6 +64,7 @@ class SemanticEncoderSettings(StrictModel):
 class QrFusionSettings(StrictModel):
     mode: str
     hidden_size: int | None = Field(default=None, ge=1)
+    intermediate_size: int | None = Field(default=None, ge=1)
     dropout: float | None = Field(default=None, ge=0, le=1)
     heads: int | None = Field(default=None, ge=1)
 

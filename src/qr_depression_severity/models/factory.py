@@ -169,10 +169,16 @@ def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
         else None
     )
     hidden_size = _required(qr_fusion.hidden_size, "qr_fusion.hidden_size")
+    intermediate_size = _required(
+        qr_fusion.intermediate_size, "qr_fusion.intermediate_size"
+    )
     adapted_branch = SeparateQrEncoder(
         PooledTokenEncoder(adapted_model, frozen=adapted.method == "frozen"),
         QrFeatureFusion(
-            adapted_model.config.hidden_size, hidden_size, qr_fusion.dropout or 0
+            adapted_model.config.hidden_size,
+            intermediate_size,
+            hidden_size,
+            qr_fusion.dropout or 0,
         ),
     )
     semantic_branch = (
@@ -183,7 +189,10 @@ def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
                 normalize=semantic.normalize is True,
             ),
             QrFeatureFusion(
-                semantic_model.config.hidden_size, hidden_size, qr_fusion.dropout or 0
+                semantic_model.config.hidden_size,
+                intermediate_size,
+                hidden_size,
+                qr_fusion.dropout or 0,
             ),
         )
         if semantic_model is not None and semantic is not None

@@ -57,7 +57,9 @@ def test_end_to_end_model_consumes_collator_tensor_shape() -> None:
 def _branch(encoder: nn.Module) -> SeparateQrEncoder:
     return SeparateQrEncoder(
         PooledTokenEncoder(encoder, frozen=False),
-        QrFeatureFusion(2, 4, 0),
+        QrFeatureFusion(
+            embedding_size=2, intermediate_size=4, hidden_size=4, dropout=0
+        ),
     )
 
 

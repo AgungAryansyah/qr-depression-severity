@@ -1,0 +1,7 @@
+extends: deberta_dora_e5_transformer.yaml
+experiment:
+  name: modern-dora-e5-transformer-compact
+  tags: [modern, dora, e5, transformer, compact, qr-fusion-512]
+model:
+  qr_fusion:
+    intermediate_size: 512

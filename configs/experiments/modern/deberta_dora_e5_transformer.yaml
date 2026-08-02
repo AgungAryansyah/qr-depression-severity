@@ -25,6 +25,7 @@ model:
   qr_fusion:
     mode: feature_interaction
     hidden_size: 256
+    intermediate_size: 1536
     dropout: 0.1
   branch_fusion:
     mode: vector_gate

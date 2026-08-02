@@ -60,7 +60,10 @@ def test_separate_qr_encoder_and_e5_prefixes() -> None:
     token_model = _ToyTokenModel()
     encoder = PooledTokenEncoder(token_model, frozen=True, normalize=True)
     qr_encoder = SeparateQrEncoder(
-        encoder, QrFeatureFusion(embedding_size=2, hidden_size=3, dropout=0)
+        encoder,
+        QrFeatureFusion(
+            embedding_size=2, intermediate_size=4, hidden_size=3, dropout=0
+        ),
     )
     inputs = torch.tensor([[1, 2, 0]])
     mask = torch.tensor([[1, 1, 0]])
@@ -70,6 +73,19 @@ def test_separate_qr_encoder_and_e5_prefixes() -> None:
     assert embedding.shape == (1, 3)
     assert not token_model.training
     assert e5_input_texts("q", "r") == ("query: q", "passage: r")
+
+
+def test_feature_interaction_fusion_uses_configured_intermediate_size() -> None:
+    fusion = QrFeatureFusion(
+        embedding_size=2, intermediate_size=5, hidden_size=3, dropout=0
+    )
+    first = fusion.network[0]
+    last = fusion.network[4]
+
+    assert isinstance(first, nn.Linear)
+    assert isinstance(last, nn.Linear)
+    assert (first.in_features, first.out_features) == (8, 5)
+    assert (last.in_features, last.out_features) == (5, 3)
 
 
 def test_fusion_modes_and_branch_dropout() -> None:

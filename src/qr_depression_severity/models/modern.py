@@ -7,14 +7,20 @@ from qr_depression_severity.models.pooling import masked_mean_pool
 
 
 class QrFeatureFusion(nn.Module):
-    def __init__(self, embedding_size: int, hidden_size: int, dropout: float) -> None:
+    def __init__(
+        self,
+        embedding_size: int,
+        intermediate_size: int,
+        hidden_size: int,
+        dropout: float,
+    ) -> None:
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(embedding_size * 4, embedding_size * 2),
+            nn.Linear(embedding_size * 4, intermediate_size),
             nn.GELU(),
-            nn.LayerNorm(embedding_size * 2),
+            nn.LayerNorm(intermediate_size),
             nn.Dropout(dropout),
-            nn.Linear(embedding_size * 2, hidden_size),
+            nn.Linear(intermediate_size, hidden_size),
         )
 
     def forward(self, question: Tensor, response: Tensor) -> Tensor:
