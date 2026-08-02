@@ -75,6 +75,18 @@ The modern configuration pins DeBERTa-v3-base and E5-base-v2 revisions and
 uses DoRA, frozen E5 embeddings, feature-interaction QR fusion, vector gating,
 a two-layer turn Transformer, Huber regression, and CORN supervision.
 
+`model.qr_fusion.intermediate_size` controls the feature-interaction MLP width.
+The reference model uses `3072 → 1536 → 256`; the compact standalone
+configuration uses `3072 → 512 → 256`:
+
+```bash
+uv run python scripts/train.py \
+  --config configs/experiments/modern/deberta_dora_e5_transformer_compact.yaml
+uv run python scripts/train_multiseed.py \
+  --config configs/experiments/modern/deberta_dora_e5_transformer_compact.yaml \
+  --seeds 0 1 2 3 4
+```
+
 Use one override syntax:
 
 ```bash
