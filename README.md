@@ -220,9 +220,9 @@ Trackers receive one event per completed epoch, containing train/development
 losses, RMSE, MAE, MSE, signed mean error, maximum absolute error, ordinal
 metrics, and optimizer learning rates. Console batch progress remains local.
 
-Evaluation with the W&B configuration resumes the checkpoint's original W&B
-run, logs the selected development or approved test metrics, and uploads the
-prediction CSV when `tracking.log_predictions` is enabled.
+The shipped W&B profiles are metrics-only: checkpoints and prediction CSVs stay
+local. Set `tracking.log_model` or `tracking.log_predictions` to `true` in a
+specific experiment YAML only when an artifact upload is intended.
 
 Each seed directory contains:
 

@@ -114,6 +114,9 @@ def _wandb_cpu_config() -> object:
     return base_config.model_copy(
         update={
             "training": base_config.training.model_copy(update={"precision": "fp32"}),
+            "tracking": base_config.tracking.model_copy(
+                update={"log_predictions": True}
+            ),
             "model": base_config.model.model_copy(
                 update={
                     "execution": base_config.model.execution.model_copy(

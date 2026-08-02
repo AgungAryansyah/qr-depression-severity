@@ -7,8 +7,8 @@ tracking:
   run_name: null
   job_type: train
   tags: [daic-woz]
-  log_model: true
-  log_predictions: true
+  log_model: false
+  log_predictions: false
   log_attention: false
   watch_model: false
   console: true

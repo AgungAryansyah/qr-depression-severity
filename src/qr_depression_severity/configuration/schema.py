@@ -166,8 +166,8 @@ class TrackingSettings(StrictModel):
     job_type: str = "train"
     tags: tuple[str, ...] = ()
     notes: str | None = None
-    log_model: bool = True
-    log_predictions: bool = True
+    log_model: bool = False
+    log_predictions: bool = False
     log_attention: bool = False
     watch_model: bool = False
     console: bool = False

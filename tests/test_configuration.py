@@ -20,6 +20,8 @@ def test_loads_composed_experiment_config() -> None:
     assert config.data.qr_cache.enabled
     assert config.tracking.backend == "wandb"
     assert config.tracking.mode == "online"
+    assert not config.tracking.log_model
+    assert not config.tracking.log_predictions
     assert config.tracking.console
     assert config.training.batch_size == 8
     assert config.model.qr_fusion is not None
