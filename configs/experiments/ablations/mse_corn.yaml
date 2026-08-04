@@ -1,3 +1,4 @@
+# Replaces Huber with MSE while retaining CORN ordinal supervision.
 extends: reference.yaml
 experiment:
   name: ablation-mse-corn

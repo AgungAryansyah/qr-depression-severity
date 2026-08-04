@@ -1,3 +1,4 @@
+# Defines the candidate matrix, seeds, and statistical settings for the core modern ablation study.
 study:
   name: core-modern
   output_dir: outputs/ablations

@@ -1,3 +1,4 @@
+# Reduces the interview Transformer to one layer to measure the second layer's contribution.
 extends: reference.yaml
 experiment:
   name: ablation-interview-transformer-1layer

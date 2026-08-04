@@ -1,3 +1,4 @@
+# Runs the modern reference with an explicit W&B group; global tracking already enables W&B by default.
 extends: deberta_dora_e5_transformer.yaml
 tracking:
   backend: wandb

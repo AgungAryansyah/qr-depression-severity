@@ -1,3 +1,4 @@
+# Replaces feature-level vector gating with one learned gate per QR pair.
 extends: reference.yaml
 experiment:
   name: ablation-fusion-scalar-gate

@@ -1,3 +1,4 @@
+# Uses regression-only MSE by replacing Huber and disabling CORN supervision.
 extends: reference.yaml
 experiment:
   name: ablation-mse-only

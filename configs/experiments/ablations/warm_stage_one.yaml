@@ -1,3 +1,4 @@
+# Trains the adapted-only source model that initializes the warm-average stage-two run.
 extends: reference.yaml
 experiment:
   name: ablation-warm-stage-one

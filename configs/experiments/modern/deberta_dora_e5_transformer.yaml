@@ -1,3 +1,4 @@
+# Defines the reference modern model: DeBERTa DoRA, frozen E5, vector fusion, Transformer, and Huber + CORN.
 extends: ../../base.yaml
 experiment:
   name: modern-dora-e5-transformer

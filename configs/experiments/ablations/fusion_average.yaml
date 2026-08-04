@@ -1,3 +1,4 @@
+# Replaces learned vector-gated branch fusion with an arithmetic average.
 extends: reference.yaml
 experiment:
   name: ablation-fusion-average

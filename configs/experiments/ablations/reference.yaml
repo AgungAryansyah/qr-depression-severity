@@ -1,3 +1,4 @@
+# Defines the unchanged modern model used as the common ablation reference.
 extends: ../modern/deberta_dora_e5_transformer.yaml
 experiment:
   name: ablation-reference

@@ -1,3 +1,4 @@
+# Runs stage two of the paper-inspired warm start with average dual-branch fusion.
 extends: reference.yaml
 experiment:
   name: ablation-warm-average

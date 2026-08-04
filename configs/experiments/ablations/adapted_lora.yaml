@@ -1,3 +1,4 @@
+# Replaces DoRA with LoRA to compare adapter methods with the same modern reference architecture.
 extends: reference.yaml
 experiment:
   name: ablation-adapted-lora

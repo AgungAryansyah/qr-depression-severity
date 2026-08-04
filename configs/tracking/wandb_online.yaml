@@ -1,3 +1,4 @@
+# Defines reusable online W&B metrics tracking; checkpoints and predictions remain local.
 tracking:
   backend: wandb
   mode: online

@@ -1,3 +1,4 @@
+# Disables external tracking while retaining console progress output.
 tracking:
   backend: disabled
   mode: disabled

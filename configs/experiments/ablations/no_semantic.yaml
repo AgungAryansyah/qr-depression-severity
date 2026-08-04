@@ -1,3 +1,4 @@
+# Removes the frozen E5 branch to measure the semantic encoder's contribution.
 extends: reference.yaml
 experiment:
   name: ablation-no-semantic

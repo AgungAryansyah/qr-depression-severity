@@ -1,3 +1,4 @@
+# Freezes DeBERTa to measure the contribution of DoRA adaptation against the modern reference.
 extends: reference.yaml
 experiment:
   name: ablation-adapted-frozen

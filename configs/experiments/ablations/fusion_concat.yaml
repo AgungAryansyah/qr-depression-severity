@@ -1,3 +1,4 @@
+# Replaces learned vector-gated branch fusion with concatenation followed by an MLP.
 extends: reference.yaml
 experiment:
   name: ablation-fusion-concat

@@ -1,1 +1,2 @@
+# Selects the repository-wide W&B tracking profile inherited by base.yaml.
 extends: wandb_online.yaml

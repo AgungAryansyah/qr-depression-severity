@@ -1,3 +1,4 @@
+# Retains Huber regression while disabling CORN ordinal supervision.
 extends: reference.yaml
 experiment:
   name: ablation-huber-only
