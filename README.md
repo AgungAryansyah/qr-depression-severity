@@ -75,6 +75,8 @@ The modern configuration pins DeBERTa-v3-base and E5-base-v2 revisions and
 uses DoRA, frozen E5 embeddings, feature-interaction QR fusion, vector gating,
 a two-layer turn Transformer, Huber regression, and CORN supervision.
 
+### Compact model
+
 `model.qr_fusion.intermediate_size` controls the feature-interaction MLP width.
 The reference model uses `3072 → 1536 → 256`; the compact standalone
 configuration uses `3072 → 512 → 256`:
@@ -139,6 +141,8 @@ not be used for model, seed, threshold, or hyperparameter selection.
 The core modern matrix compares adapted encoder method, semantic-branch
 presence, branch fusion, Transformer depth, regression/ordinal objective, and
 warm start. It does not restore the retired paper reproduction model.
+See [the ablation-study guide](docs/ablation_study.md) for the full candidate
+matrix, W&B grouping, recovery phases, and result files.
 
 Run the complete study:
 

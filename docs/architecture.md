@@ -94,8 +94,15 @@ QR representation:
 
 ```text
 x = [q; r; q * r; |q - r|]
-e_qr = Linear(4d, 2d) -> GELU -> LayerNorm -> Dropout -> Linear(2d, 256)
+e_qr = Linear(4d, h) -> GELU -> LayerNorm -> Dropout -> Linear(h, 256)
 ```
+
+### Compact QR-fusion configuration
+
+`h` is configured as `model.qr_fusion.intermediate_size`. The reference
+configuration uses `3072 -> 1536 -> 256`; the compact standalone
+configuration uses `3072 -> 512 -> 256` to reduce the trainable QR-fusion
+parameters without changing the two encoder backbones or output dimension.
 
 The two branches are deliberately complementary:
 
@@ -181,12 +188,12 @@ configuration, split IDs, environment and metadata records, training history,
 best checkpoint, metrics, and prediction files. Raw transcript text and
 tokenized text are not saved as run artifacts.
 
-Tracking is an adapter, not a model or data dependency. The default local
-tracker writes the artifacts and prints epoch-level progress. The optional
-Weights & Biases adapter is configured in YAML and loads `WANDB_API_KEY` from
-the process environment or an ignored `.env` file. It creates one run per
-seed, logs epoch-level metrics and artifacts when enabled, and resumes that
-same run for evaluation metrics and prediction artifacts.
+Tracking is an adapter, not a model or data dependency. The global tracking
+configuration currently enables Weights & Biases and reads `WANDB_API_KEY`
+from the process environment or an ignored `.env` file. It creates one run per
+seed, logs epoch-level metrics, and resumes that same run for evaluation
+metrics. Checkpoints and predictions remain local run artifacts; the active
+configuration does not upload them to W&B.
 
 ## Controlled ablations and warm start
 
@@ -212,6 +219,9 @@ Benjamini-Hochberg-adjusted p-values. If participant IDs differ after QR
 loading, that seed is excluded from the paired comparison and recorded as a
 warning.
 
+See [the ablation-study guide](ablation_study.md) for the candidate matrix,
+execution command, recovery phases, and result files.
+
 ## Package boundaries
 
 ```text
@@ -234,6 +244,9 @@ than owning an external tracking implementation.
 ```bash
 uv run python scripts/train.py \
   --config configs/experiments/modern/deberta_dora_e5_transformer.yaml
+
+uv run python scripts/train.py \
+  --config configs/experiments/modern/deberta_dora_e5_transformer_compact.yaml
 
 uv run python scripts/evaluate.py \
   --config configs/experiments/modern/deberta_dora_e5_transformer.yaml \
