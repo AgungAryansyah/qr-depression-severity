@@ -33,7 +33,7 @@ class WandbTracker:
             "project": settings.project,
             "entity": settings.entity,
             "group": settings.group,
-            "name": settings.run_name,
+            "name": settings.run_name or _experiment_name(config),
             "job_type": settings.job_type,
             "tags": list(
                 dict.fromkeys(
@@ -97,6 +97,12 @@ def _experiment_tags(config: Mapping[str, object]) -> tuple[str, ...]:
     if not isinstance(tags, (list, tuple)):
         return ()
     return tuple(tag for tag in tags if isinstance(tag, str))
+
+
+def _experiment_name(config: Mapping[str, object]) -> str | None:
+    experiment = _setting(config, "experiment")
+    name = experiment.get("name")
+    return name if isinstance(name, str) and name else None
 
 
 def _setting(model: Mapping[str, object], name: str) -> Mapping[str, object]:

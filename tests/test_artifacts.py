@@ -90,6 +90,7 @@ def test_wandb_online_loads_api_key_from_dotenv_without_overriding_environment(
 
     assert fake_wandb.options["project"] == "qr-depression-severity"
     assert fake_wandb.options["mode"] == "online"
+    assert fake_wandb.options["name"] == "modern-dora-e5-transformer"
     assert fake_wandb.options["id"] == "existing-run"
     assert fake_wandb.options["resume"] == "must"
     assert {
