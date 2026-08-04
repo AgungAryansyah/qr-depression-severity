@@ -109,7 +109,7 @@ def test_wandb_evaluator_rejects_checkpoint_without_run_metadata(
 
 def _wandb_cpu_config() -> object:
     base_config = load_experiment_config(
-        Path("configs/experiments/modern/deberta_dora_e5_transformer_wandb.yaml")
+        Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
     )
     return base_config.model_copy(
         update={

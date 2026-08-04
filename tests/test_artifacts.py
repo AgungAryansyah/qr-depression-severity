@@ -75,7 +75,7 @@ def test_wandb_online_loads_api_key_from_dotenv_without_overriding_environment(
     monkeypatch, tmp_path: Path
 ) -> None:
     config = load_experiment_config(
-        Path("configs/experiments/modern/deberta_dora_e5_transformer_wandb.yaml")
+        Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
     )
     dotenv_path = tmp_path / ".env"
     dotenv_path.write_text("WANDB_API_KEY=file-key\n", encoding="utf-8")
@@ -105,7 +105,7 @@ def test_wandb_online_loads_api_key_from_dotenv_without_overriding_environment(
 
 def test_wandb_online_requires_api_key(monkeypatch, tmp_path: Path) -> None:
     config = load_experiment_config(
-        Path("configs/experiments/modern/deberta_dora_e5_transformer_wandb.yaml")
+        Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
     )
     settings = config.tracking.model_copy(update={"dotenv_path": tmp_path / ".env"})
     monkeypatch.delenv("WANDB_API_KEY", raising=False)
