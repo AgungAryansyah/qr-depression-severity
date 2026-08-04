@@ -30,7 +30,7 @@ class DataSettings(StrictModel):
         default_factory=lambda: PreprocessingSettings()
     )
     max_qr_pairs: int = Field(default=128, ge=1)
-    max_tokens: int = Field(default=128, ge=1)
+    max_tokens: int = Field(default=256, ge=1)
     allowed_missing_transcript_ids: tuple[int, ...] = ()
     qr_cache: QrCacheSettings = Field(default_factory=QrCacheSettings)
 
