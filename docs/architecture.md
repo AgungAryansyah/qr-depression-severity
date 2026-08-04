@@ -97,12 +97,20 @@ x = [q; r; q * r; |q - r|]
 e_qr = Linear(4d, h) -> GELU -> LayerNorm -> Dropout -> Linear(h, 256)
 ```
 
-### Compact QR-fusion configuration
+### QR-fusion-only compact configuration
 
 `h` is configured as `model.qr_fusion.intermediate_size`. The reference
 configuration uses `3072 -> 1536 -> 256`; the compact standalone
 configuration uses `3072 -> 512 -> 256` to reduce the trainable QR-fusion
 parameters without changing the two encoder backbones or output dimension.
+
+### Small dual-branch configuration
+
+`deberta_dora_e5_transformer_small.yaml` reduces the entire dual-branch
+pipeline rather than only the QR-fusion MLP. It uses DeBERTa-v3-small with
+rank-4 DoRA, frozen E5-small-v2, 128-dimensional branch vectors, a
+512-dimensional QR-fusion bottleneck, and a two-layer, two-head Transformer
+with a 256-dimensional feed-forward layer.
 
 The two branches are deliberately complementary:
 
@@ -197,12 +205,11 @@ configuration does not upload them to W&B.
 
 ## Controlled ablations and warm start
 
-`configs/ablations/core.yaml` defines the core modern study. Screening runs
-each candidate on development with seed 0; confirmation runs five seeds for
-the reference and the screening winner of each axis. The selected configuration
-is the one with the lowest mean development RMSE, with mean MAE and candidate
-ID as deterministic tie-breakers. Only its lowest-development-RMSE checkpoint
-may be evaluated on test.
+`configs/ablations/core.yaml` defines the full modern study.
+`configs/ablations/core_small.yaml` defines the smaller study across adaptation,
+semantic-branch, branch-fusion, and Transformer-depth axes. Both currently use
+seed 0 for screening and confirmation. Their test evaluations are provisional;
+restore five distinct confirmation seeds before reporting a final result.
 
 The warm-start ablation applies the paper's two-stage procedure to the modern
 components. Stage one is adapted-only DeBERTa. Stage two enables frozen E5 and

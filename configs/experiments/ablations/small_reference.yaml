@@ -1,0 +1,5 @@
+# Defines the smaller dual-branch model used as the compact-study reference.
+extends: ../modern/deberta_dora_e5_transformer_small.yaml
+experiment:
+  name: ablation-small-reference
+  tags: [ablation, reference, small]

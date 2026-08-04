@@ -1,0 +1,7 @@
+# Reduces the compact interview Transformer to one layer.
+extends: small_reference.yaml
+experiment:
+  name: ablation-small-interview-transformer-1layer
+model:
+  interview_encoder:
+    layers: 1

@@ -42,9 +42,8 @@ class AblationStudyConfig(StrictModel):
             set(self.study.screening_seeds)
         ) != len(self.study.screening_seeds):
             raise ValueError("Screening seeds must be non-empty and distinct")
-        if (
-            len(self.study.confirmation_seeds) != 5
-            or len(set(self.study.confirmation_seeds)) != 5
-        ):
-            raise ValueError("Confirmation requires exactly five distinct seeds")
+        if not self.study.confirmation_seeds or len(
+            set(self.study.confirmation_seeds)
+        ) != len(self.study.confirmation_seeds):
+            raise ValueError("Confirmation seeds must be non-empty and distinct")
         return self

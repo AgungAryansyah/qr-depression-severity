@@ -1,0 +1,7 @@
+# Freezes the small DeBERTa branch to measure the contribution of DoRA.
+extends: small_reference.yaml
+experiment:
+  name: ablation-small-adapted-frozen
+model:
+  adapted_encoder:
+    method: frozen

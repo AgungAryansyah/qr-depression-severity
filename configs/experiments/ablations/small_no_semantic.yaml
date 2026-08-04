@@ -1,0 +1,7 @@
+# Removes the frozen E5-small branch to measure its contribution.
+extends: small_reference.yaml
+experiment:
+  name: ablation-small-no-semantic
+model:
+  semantic_encoder:
+    enabled: false

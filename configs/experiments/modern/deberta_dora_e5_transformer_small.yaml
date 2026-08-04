@@ -1,0 +1,21 @@
+# Defines a smaller dual-branch reference with DeBERTa-v3-small, E5-small, and narrower learned layers.
+extends: deberta_dora_e5_transformer.yaml
+experiment:
+  name: modern-small-dora-e5-transformer
+  tags: [modern, small, dora, e5, transformer, qr-hidden-128]
+model:
+  adapted_encoder:
+    name: microsoft/deberta-v3-small
+    revision: a36c739020e01763fe789b4b85e2df55d6180012
+    rank: 4
+    alpha: 8
+  semantic_encoder:
+    name: intfloat/e5-small-v2
+    revision: ffb93f3bd4047442299a41ebb6fa998a38507c52
+  qr_fusion:
+    hidden_size: 128
+    intermediate_size: 512
+  interview_encoder:
+    hidden_size: 128
+    heads: 2
+    feedforward_size: 256

@@ -1,0 +1,7 @@
+# Replaces small-model vector gating with arithmetic branch averaging.
+extends: small_reference.yaml
+experiment:
+  name: ablation-small-fusion-average
+model:
+  branch_fusion:
+    mode: average

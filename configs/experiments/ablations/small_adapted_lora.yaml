@@ -1,0 +1,7 @@
+# Replaces DoRA with LoRA for the small DeBERTa branch.
+extends: small_reference.yaml
+experiment:
+  name: ablation-small-adapted-lora
+model:
+  adapted_encoder:
+    method: lora

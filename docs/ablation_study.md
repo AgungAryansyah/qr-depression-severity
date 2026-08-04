@@ -1,15 +1,18 @@
-# Core modern ablation study
+# Modern QR ablation studies
 
-This guide runs the modern QR model study defined in
-`configs/ablations/core.yaml`. It is a research comparison only; development
-data selects configurations, and test is evaluated once for the selected
-checkpoint.
+This guide covers the full modern study (`configs/ablations/core.yaml`) and the
+smaller dual-branch study (`configs/ablations/core_small.yaml`). Both are
+research comparisons only: development selects configurations and test is
+evaluated once for the selected checkpoint.
 
 ## Run the complete study
 
 ```bash
 uv run python scripts/run_ablation.py \
   --config configs/ablations/core.yaml
+
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/core_small.yaml
 ```
 
 The command runs the phases in order: `screen`, `confirm`, then `test`. Use a
@@ -50,29 +53,34 @@ adapted-only source model for `warm-average`; stage two copies compatible
 adapted-branch, interview-encoder, and head weights, then initializes E5 and
 average fusion separately.
 
-The compact QR-fusion model is deliberately outside this study. Its narrower
-MLP changes model capacity rather than one of the predefined core comparisons;
-it is documented with the standalone model configurations.
+The QR-fusion-only compact model remains outside these studies because it
+changes capacity without isolating a predefined axis. The smaller dual-branch
+study uses DeBERTa-v3-small, E5-small-v2, 128-dimensional QR vectors, and a
+two-layer 128-wide Transformer. It includes only the adaptation, semantic,
+branch-fusion, and Transformer-depth axes shown above; objective and warm-start
+candidates remain exclusive to the full modern study.
 
 ## Selection protocol
 
-Screening runs every candidate once with seed `0`. For each axis, the best
-development-RMSE candidate and the reference proceed to confirmation.
-Confirmation runs seeds `0` through `4`, selects the lowest mean development
-RMSE configuration (then mean MAE), and evaluates its best development
-checkpoint once on test.
+Screening and confirmation currently use seed `0` only. For each axis, the
+best development-RMSE candidate and the reference proceed to confirmation; the
+lowest development RMSE then selects the checkpoint for the optional test
+evaluation. These one-seed results are provisional. Restore
+`confirmation_seeds: [0, 1, 2, 3, 4]` in both manifests before a finalized
+five-seed study.
 
 Each candidate, phase, and seed is an independent W&B run in the
-`core-modern` group. The active tracking configuration logs epoch metrics only;
-checkpoints and predictions remain in the local run directory.
+`core-modern` or `core-modern-small` group. The active tracking configuration
+logs epoch metrics only; checkpoints and predictions remain in the local run
+directory.
 
 ## Results
 
-Study summaries are written under `outputs/ablations/core-modern`:
+Study summaries are written under `outputs/ablations/<study-name>`:
 
 - `screening.json` records all one-seed runs and finalists.
-- `confirmation.json` records five-seed development metrics and paired error
-  statistics.
+- `confirmation.json` records the configured development metrics and paired
+  error statistics.
 - `test.json` records the single approved test evaluation.
 
 The confirmation report includes paired absolute- and squared-error

@@ -119,5 +119,23 @@ def test_ablation_uses_one_group_with_distinct_candidate_runs() -> None:
     assert "candidate:adapted-lora" in lora_config.tracking.tags
 
 
+def test_small_ablation_uses_a_distinct_wandb_group() -> None:
+    study = load_ablation_study(Path("configs/ablations/core_small.yaml"))
+    reference = next(candidate for candidate in study.candidates if candidate.reference)
+
+    config = ablation_module._run_config(
+        study,
+        load_experiment_config(reference.config),
+        reference.id,
+        reference.axis,
+        0,
+        "screen",
+    )
+
+    assert config.tracking.group == "core-modern-small"
+    assert config.tracking.run_name == "reference-screen-seed-0"
+    assert "study:core-modern-small" in config.tracking.tags
+
+
 def _rmse(name: str) -> float:
     return 1.0 if "adapted-lora" in name else 2.0

@@ -75,7 +75,7 @@ The modern configuration pins DeBERTa-v3-base and E5-base-v2 revisions and
 uses DoRA, frozen E5 embeddings, feature-interaction QR fusion, vector gating,
 a two-layer turn Transformer, Huber regression, and CORN supervision.
 
-### Compact model
+### QR-fusion compact model
 
 `model.qr_fusion.intermediate_size` controls the feature-interaction MLP width.
 The reference model uses `3072 → 1536 → 256`; the compact standalone
@@ -95,6 +95,18 @@ Use one override syntax:
 uv run python scripts/train.py \
   --config configs/experiments/modern/deberta_dora_e5_transformer.yaml \
   --override training.seed=7
+```
+
+### Small dual-branch model
+
+`deberta_dora_e5_transformer_small.yaml` reduces both pretrained branches and
+the learned QR/interview layers. It uses DeBERTa-v3-small with rank-4 DoRA,
+frozen E5-small-v2, 128-dimensional QR vectors, and a two-layer 128-wide
+Transformer:
+
+```bash
+uv run python scripts/train.py \
+  --config configs/experiments/modern/deberta_dora_e5_transformer_small.yaml
 ```
 
 ## Training and evaluation protocol
@@ -140,7 +152,9 @@ not be used for model, seed, threshold, or hyperparameter selection.
 
 The core modern matrix compares adapted encoder method, semantic-branch
 presence, branch fusion, Transformer depth, regression/ordinal objective, and
-warm start. It does not restore the retired paper reproduction model.
+warm start. `core_small.yaml` applies the adaptation, semantic, fusion, and
+Transformer-depth axes to the smaller dual-branch profile. Neither study
+restores the retired paper reproduction model.
 See [the ablation-study guide](docs/ablation_study.md) for the full candidate
 matrix, W&B grouping, recovery phases, and result files.
 
@@ -149,16 +163,18 @@ Run the complete study:
 ```bash
 uv run python scripts/run_ablation.py \
   --config configs/ablations/core.yaml
+
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/core_small.yaml
 ```
 
 Use `--phase screen`, `--phase confirm`, or `--phase test` only to recover an
 interrupted study.
 
-Screening runs seed `0` for every candidate and retains the reference plus the
-lowest-development-RMSE candidate for each ablation axis. Confirmation runs
-five seeds for those finalists, selects the configuration by mean development
-RMSE (then MAE), and evaluates its individual best development checkpoint once
-on test.
+Screening and confirmation currently run seed `0` only for both studies to
+limit experiment volume. Test evaluation remains available, but these results
+are provisional. Restore `confirmation_seeds: [0, 1, 2, 3, 4]` in both study
+manifests before reporting a finalized five-seed result.
 
 The warm-start candidate uses the paper's two-stage training idea with modern
 components: an adapted-only DeBERTa model is trained first, then its compatible

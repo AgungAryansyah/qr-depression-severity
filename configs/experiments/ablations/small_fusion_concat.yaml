@@ -1,0 +1,7 @@
+# Replaces small-model vector gating with concatenation and projection.
+extends: small_reference.yaml
+experiment:
+  name: ablation-small-fusion-concat
+model:
+  branch_fusion:
+    mode: concat

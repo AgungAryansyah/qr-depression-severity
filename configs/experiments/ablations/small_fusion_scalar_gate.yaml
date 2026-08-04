@@ -1,0 +1,7 @@
+# Replaces feature-level gating with one learned gate per QR pair.
+extends: small_reference.yaml
+experiment:
+  name: ablation-small-fusion-scalar-gate
+model:
+  branch_fusion:
+    mode: scalar_gate

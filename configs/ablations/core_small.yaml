@@ -1,0 +1,35 @@
+# Defines the core-axis ablation matrix for the smaller dual-branch modern model.
+study:
+  name: core-modern-small
+  output_dir: outputs/ablations
+  screening_seeds: [0]
+  confirmation_seeds: [0]
+  bootstrap_samples: 10000
+  permutation_samples: 10000
+  significance_seed: 2026
+candidates:
+  - id: reference
+    axis: reference
+    config: ../experiments/ablations/small_reference.yaml
+    reference: true
+  - id: adapted-frozen
+    axis: adaptation
+    config: ../experiments/ablations/small_adapted_frozen.yaml
+  - id: adapted-lora
+    axis: adaptation
+    config: ../experiments/ablations/small_adapted_lora.yaml
+  - id: no-semantic
+    axis: semantic
+    config: ../experiments/ablations/small_no_semantic.yaml
+  - id: fusion-average
+    axis: branch_fusion
+    config: ../experiments/ablations/small_fusion_average.yaml
+  - id: fusion-concat
+    axis: branch_fusion
+    config: ../experiments/ablations/small_fusion_concat.yaml
+  - id: fusion-scalar-gate
+    axis: branch_fusion
+    config: ../experiments/ablations/small_fusion_scalar_gate.yaml
+  - id: transformer-1layer
+    axis: interview_encoder
+    config: ../experiments/ablations/small_interview_transformer_1layer.yaml
