@@ -19,7 +19,12 @@ malformed interview rather than silently changing the study population.
 The three official transcripts without Ellie turns (451, 458, and 480) are
 retained as a single response-only pair. The fixed comparison rules and
 published-baseline discrepancies are in
-[the controlled experiment protocol](docs/controlled_experiment_protocol.md).
+[the shared experiment protocol](docs/experiments/protocol.md).
+
+## Experiment guides
+
+Choose the appropriate configuration or controlled study from the
+[experiment guide](docs/experiments/).
 
 ## Setup
 
@@ -180,7 +185,7 @@ warm start. `core_small.yaml` applies the adaptation, semantic, fusion, and
 Transformer-depth axes to the smaller dual-branch profile. `simple_input.yaml`
 compares QR and response-only input with the frozen mean-pooling model. None
 of these studies restores the retired paper reproduction model.
-See [the ablation-study guide](docs/ablation_study.md) for the full candidate
+See [the modern-ablation guide](docs/experiments/modern-ablations.md) for the full candidate
 matrix, W&B grouping, recovery phases, and result files.
 
 Run the complete study:

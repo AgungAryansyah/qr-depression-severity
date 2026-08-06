@@ -1,17 +1,17 @@
-# QR depression-severity ablation studies
+# Modern-model ablation studies
 
-The repository has three controlled QR-model studies. Development data selects
-the candidate; test is a single final evaluation and is never used to choose a
-model, seed, or hyperparameter.
+The repository has two controlled modern-model studies. Development data
+selects the candidate; test is a single final evaluation and is never used to
+choose a model, seed, or hyperparameter.
 
 | Study | Manifest | W&B group | Purpose |
 | --- | --- | --- | --- |
 | Full modern | `configs/ablations/core.yaml` | `core-modern` | Tests all planned representation, adaptation, objective, and warm-start axes. |
 | Small dual-branch | `configs/ablations/core_small.yaml` | `core-modern-small` | Tests the core representation axes after reducing both backbones and learned layers. |
-| Simple input | `configs/ablations/simple_input.yaml` | `simple-input` | Tests QR input against participant-response-only input with the same frozen encoder and linear head. |
 
 The QR-fusion-only `deberta_dora_e5_transformer_compact.yaml` is a standalone
-capacity variant. It is not part of a controlled study.
+capacity variant. It is not part of a controlled study. The frozen-MPNet input
+comparison is documented in [simple controls](simple-controls.md).
 
 ## Current provisional protocol
 
@@ -87,27 +87,15 @@ The study deliberately excludes loss and warm-start axes for now.
 | `fusion-scalar-gate` | branch fusion | Uses one learned gate per QR pair. |
 | `transformer-1layer` | interview encoder | Reduces the compact Transformer to one layer. |
 
-## Simple input candidate matrix
+## Warm-start procedure
 
-Both candidates use frozen `all-mpnet-base-v2`, mean QR pooling, and a linear
-regression head. They differ only in `data.input_mode`.
-
-| Candidate | Axis | Change |
-| --- | --- | --- |
-| `qr` | reference | Encodes each question and response together. |
-| `response-only` | input | Encodes only participant responses. |
-
-Screening uses seed `0`; confirmation uses seeds `0` through `4`. Run
-screening and confirmation separately, then reserve test for the selected
-candidate:
-
-```bash
-uv run python scripts/run_ablation.py \
-  --config configs/ablations/simple_input.yaml --phase screen
-
-uv run python scripts/run_ablation.py \
-  --config configs/ablations/simple_input.yaml --phase confirm
-```
+The warm-start ablation applies the paper's two-stage procedure to the modern
+components. Stage one is adapted-only DeBERTa. Stage two enables frozen E5 and
+average fusion, then copies the compatible DeBERTa/DoRA QR branch, interview
+Transformer, regression head, and CORN head. E5 and fusion parameters start
+newly initialized; stage two uses a new optimizer and scheduler. Source hash,
+epoch, copied tensors, and resolved source configuration are retained in the
+stage-two run artifacts.
 
 ## Selection and formal protocol
 

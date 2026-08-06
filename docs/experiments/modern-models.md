@@ -1,4 +1,4 @@
-# Modern QR Depression-Severity Pipeline
+# Modern model experiments
 
 This document describes the active, modern question-response (QR) research
 pipeline. It predicts a PHQ-8 total score and an auxiliary ordered severity
@@ -203,31 +203,10 @@ seed, logs epoch-level metrics, and resumes that same run for evaluation
 metrics. Checkpoints and predictions remain local run artifacts; the active
 configuration does not upload them to W&B.
 
-## Controlled ablations and warm start
+## Related controlled studies
 
-`configs/ablations/core.yaml` defines the full modern study.
-`configs/ablations/core_small.yaml` defines the smaller study across adaptation,
-semantic-branch, branch-fusion, and Transformer-depth axes. Both currently use
-seed 0 for screening and confirmation. Their test evaluations are provisional;
-restore five distinct confirmation seeds before reporting a final result.
-
-The warm-start ablation applies the paper's two-stage procedure to the modern
-components. Stage one is adapted-only DeBERTa. Stage two enables frozen E5 and
-average fusion, then copies the compatible DeBERTa/DoRA QR branch, interview
-Transformer, regression head, and CORN head. E5 and fusion parameters start
-newly initialized; stage two uses a new optimizer and scheduler. Source hash,
-epoch, copied tensors, and resolved source configuration are retained in the
-stage-two run artifacts.
-
-Confirmed runs export development predictions for paired absolute- and
-squared-error comparisons against the reference. The study reports bootstrap
-confidence intervals, sign-flip permutation p-values, and
-Benjamini-Hochberg-adjusted p-values. If participant IDs differ after QR
-loading, that seed is excluded from the paired comparison and recorded as a
-warning.
-
-See [the ablation-study guide](ablation_study.md) for the candidate matrix,
-execution command, recovery phases, and result files.
+See [modern ablations](modern-ablations.md) for component comparisons,
+warm-start details, selection rules, and result files.
 
 ## Package boundaries
 
