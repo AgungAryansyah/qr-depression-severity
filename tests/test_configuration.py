@@ -19,6 +19,7 @@ def test_loads_composed_experiment_config() -> None:
     assert config.model.family == "modern"
     assert config.data.dataset == "daic_woz"
     assert config.data.root == Path("data")
+    assert config.data.input_mode == "question_response"
     assert config.data.qr_cache.enabled
     assert config.tracking.backend == "wandb"
     assert config.tracking.mode == "online"
@@ -149,6 +150,17 @@ def test_loads_simple_frozen_mpnet_configuration() -> None:
     assert not config.model.semantic_encoder.enabled
     assert config.model.heads is not None
     assert config.model.heads.ordinal_loss == "none"
+
+
+def test_loads_response_only_simple_control_study() -> None:
+    study = load_ablation_study(Path("configs/ablations/simple_input.yaml"))
+    response_only = next(
+        candidate for candidate in study.candidates if candidate.id == "response-only"
+    )
+    config = load_experiment_config(response_only.config)
+
+    assert study.study.confirmation_seeds == (0, 1, 2, 3, 4)
+    assert config.data.input_mode == "response_only"
 
 
 def test_loads_small_core_ablation_study() -> None:

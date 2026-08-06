@@ -1,0 +1,16 @@
+study:
+  name: simple-input
+  output_dir: outputs/ablations
+  screening_seeds: [0]
+  confirmation_seeds: [0, 1, 2, 3, 4]
+  bootstrap_samples: 10000
+  permutation_samples: 10000
+  significance_seed: 2026
+candidates:
+  - id: qr
+    axis: reference
+    config: ../experiments/simple/frozen_mpnet_mean.yaml
+    reference: true
+  - id: response-only
+    axis: input
+    config: ../experiments/simple/frozen_mpnet_response_only_mean.yaml

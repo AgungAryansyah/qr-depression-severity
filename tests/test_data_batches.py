@@ -58,13 +58,32 @@ def test_collator_omits_semantic_inputs_when_disabled() -> None:
 
 def test_simple_collator_combines_question_and_response() -> None:
     tokenizer = _Tokenizer()
-    collator = SimpleQrCollator(tokenizer, max_qr_pairs=2, max_tokens=4)
+    collator = SimpleQrCollator(
+        tokenizer,
+        max_qr_pairs=2,
+        max_tokens=4,
+        input_mode="question_response",
+    )
 
     batch = collator([_example(300, 2.0, 1)])
 
     assert tokenizer.calls == [["question-0 [SEP] response-0"]]
     assert batch["simple_input_ids"].shape == (1, 1, 2)
     assert "adapted_question_input_ids" not in batch
+
+
+def test_simple_collator_can_use_participant_responses_only() -> None:
+    tokenizer = _Tokenizer()
+    collator = SimpleQrCollator(
+        tokenizer,
+        max_qr_pairs=2,
+        max_tokens=4,
+        input_mode="response_only",
+    )
+
+    collator([_example(300, 2.0, 1)])
+
+    assert tokenizer.calls == [["response-0"]]
 
 
 def test_transcript_reader_preserves_turn_metadata(tmp_path: Path) -> None:

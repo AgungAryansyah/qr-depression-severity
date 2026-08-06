@@ -1,0 +1,6 @@
+extends: frozen_mpnet_mean.yaml
+experiment:
+  name: simple-frozen-mpnet-response-only-mean
+  tags: [simple, frozen, mpnet, mean-pooling, linear-head, response-only]
+data:
+  input_mode: response_only

@@ -85,11 +85,18 @@ class ModernQrCollator:
 
 class SimpleQrCollator:
     def __init__(
-        self, tokenizer: Tokenizer, max_qr_pairs: int, max_tokens: int
+        self,
+        tokenizer: Tokenizer,
+        max_qr_pairs: int,
+        max_tokens: int,
+        input_mode: str,
     ) -> None:
+        if input_mode not in {"question_response", "response_only"}:
+            raise ValueError(f"Unsupported simple input mode: {input_mode}")
         self.tokenizer = tokenizer
         self.max_qr_pairs = max_qr_pairs
         self.max_tokens = max_tokens
+        self.input_mode = input_mode
 
     def __call__(self, examples: Sequence[InterviewExample]) -> dict[str, Tensor]:
         if not examples:
@@ -98,7 +105,7 @@ class SimpleQrCollator:
             raise ValueError(f"Interview exceeds max_qr_pairs={self.max_qr_pairs}")
         separator = getattr(self.tokenizer, "sep_token", " ") or " "
         texts = [
-            _qr_text(pair.question, pair.response, separator)
+            _qr_text(pair.question, pair.response, separator, self.input_mode)
             for example in examples
             for pair in example.qr_pairs
         ]
@@ -157,5 +164,7 @@ def _qr_mask(examples: Sequence[InterviewExample]) -> Tensor:
     return mask
 
 
-def _qr_text(question: str, response: str, separator: str) -> str:
+def _qr_text(question: str, response: str, separator: str, input_mode: str) -> str:
+    if input_mode == "response_only":
+        return response
     return f"{question} {separator} {response}".strip() if question else response

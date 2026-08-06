@@ -150,9 +150,12 @@ def build_collator(
             adapted_tokenizer,
             config.data.max_qr_pairs,
             config.data.max_tokens,
+            config.data.input_mode,
         )
     if config.model.family != "modern":
         raise ValueError(f"Unsupported model family: {config.model.family}")
+    if config.data.input_mode != "question_response":
+        raise ValueError("Modern model requires question_response input mode")
     from qr_depression_severity.data.collators import ModernQrCollator
 
     return ModernQrCollator(

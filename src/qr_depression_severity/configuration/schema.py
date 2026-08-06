@@ -31,6 +31,7 @@ class DataSettings(StrictModel):
     )
     max_qr_pairs: int = Field(default=128, ge=1)
     max_tokens: int = Field(default=256, ge=1)
+    input_mode: Literal["question_response", "response_only"] = "question_response"
     qr_cache: QrCacheSettings = Field(default_factory=QrCacheSettings)
 
 
