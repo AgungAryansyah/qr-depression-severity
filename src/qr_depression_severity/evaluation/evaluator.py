@@ -11,11 +11,11 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 
 from qr_depression_severity.configuration.schema import ExperimentConfig
-from qr_depression_severity.data.collators import ModernQrCollator
 from qr_depression_severity.data.loading import load_interviews
 from qr_depression_severity.data.splits import validate_daic_woz
 from qr_depression_severity.models.factory import (
-    build_modern_model,
+    build_collator,
+    build_model,
     build_tokenizers,
     place_model_on_configured_devices,
 )
@@ -47,7 +47,7 @@ def evaluate_checkpoint(
     precision = validate_precision(config.training.precision)
     try:
         validate_daic_woz(config.data)
-        model = build_modern_model(config)
+        model = build_model(config)
         device = place_model_on_configured_devices(model, config)
         load_model_checkpoint(checkpoint, model, config)
         adapted_tokenizer, semantic_tokenizer = build_tokenizers(config)
@@ -55,12 +55,7 @@ def evaluate_checkpoint(
             load_interviews(config.data, split),
             batch_size=config.training.batch_size,
             shuffle=False,
-            collate_fn=ModernQrCollator(
-                adapted_tokenizer,
-                semantic_tokenizer,
-                config.data.max_qr_pairs,
-                config.data.max_tokens,
-            ),
+            collate_fn=build_collator(config, adapted_tokenizer, semantic_tokenizer),
         )
         participant_ids, predictions, targets = _predict(
             model, loader, device, precision

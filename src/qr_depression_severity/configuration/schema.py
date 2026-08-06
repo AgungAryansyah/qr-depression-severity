@@ -100,6 +100,7 @@ class ModelExecutionSettings(StrictModel):
 
 
 class ModelSettings(StrictModel):
+    family: Literal["modern", "simple"] = "modern"
     adapted_encoder: AdaptedEncoderSettings | None = None
     semantic_encoder: SemanticEncoderSettings | None = None
     qr_fusion: QrFusionSettings | None = None

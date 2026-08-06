@@ -43,7 +43,7 @@ def test_train_experiment_writes_a_best_checkpoint(monkeypatch, tmp_path: Path) 
         ),
     )
     monkeypatch.setattr(train_module, "load_interviews", _interviews)
-    monkeypatch.setattr(train_module, "build_modern_model", lambda config: _ToyModel())
+    monkeypatch.setattr(train_module, "build_model", lambda config: _ToyModel())
     monkeypatch.setattr(
         train_module, "build_tokenizers", lambda config: (_tokenizer, _tokenizer)
     )

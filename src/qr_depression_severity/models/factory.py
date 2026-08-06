@@ -129,6 +129,29 @@ class EndToEndModernModel(nn.Module):
         return embeddings.reshape(batch_size, pairs, -1)
 
 
+def build_model(config: ExperimentConfig) -> nn.Module:
+    if config.model.family == "modern":
+        return build_modern_model(config)
+    raise ValueError(f"Unsupported model family: {config.model.family}")
+
+
+def build_collator(
+    config: ExperimentConfig,
+    adapted_tokenizer: object,
+    semantic_tokenizer: object | None,
+) -> object:
+    if config.model.family != "modern":
+        raise ValueError(f"Unsupported model family: {config.model.family}")
+    from qr_depression_severity.data.collators import ModernQrCollator
+
+    return ModernQrCollator(
+        adapted_tokenizer,
+        semantic_tokenizer,
+        config.data.max_qr_pairs,
+        config.data.max_tokens,
+    )
+
+
 def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
     adapted = _required(config.model.adapted_encoder, "adapted_encoder")
     qr_fusion = _required(config.model.qr_fusion, "qr_fusion")
@@ -248,6 +271,8 @@ def place_model_on_configured_devices(
 
 
 def build_tokenizers(config: ExperimentConfig) -> tuple[object, object | None]:
+    if config.model.family != "modern":
+        raise ValueError(f"Unsupported model family: {config.model.family}")
     adapted = _required(config.model.adapted_encoder, "adapted_encoder")
     semantic = config.model.semantic_encoder
     from transformers import AutoTokenizer

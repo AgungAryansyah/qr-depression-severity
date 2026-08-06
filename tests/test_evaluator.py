@@ -45,7 +45,7 @@ def test_evaluator_writes_predictions_and_blocks_repeated_test(
         ),
     )
     monkeypatch.setattr(evaluator, "load_interviews", _interviews)
-    monkeypatch.setattr(evaluator, "build_modern_model", lambda config: _ToyModel())
+    monkeypatch.setattr(evaluator, "build_model", lambda config: _ToyModel())
     monkeypatch.setattr(
         evaluator, "build_tokenizers", lambda config: (_tokenizer, _tokenizer)
     )
@@ -137,7 +137,7 @@ def _patch_evaluation_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     )
     monkeypatch.setattr(evaluator, "load_interviews", _interviews)
-    monkeypatch.setattr(evaluator, "build_modern_model", lambda config: _ToyModel())
+    monkeypatch.setattr(evaluator, "build_model", lambda config: _ToyModel())
     monkeypatch.setattr(
         evaluator, "build_tokenizers", lambda config: (_tokenizer, _tokenizer)
     )

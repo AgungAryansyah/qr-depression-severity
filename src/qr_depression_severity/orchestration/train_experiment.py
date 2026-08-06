@@ -11,11 +11,11 @@ import torch
 from torch.utils.data import DataLoader
 
 from qr_depression_severity.configuration.schema import ExperimentConfig
-from qr_depression_severity.data.collators import ModernQrCollator
 from qr_depression_severity.data.loading import load_interviews
 from qr_depression_severity.data.splits import EXPECTED_SPLIT_COUNTS, validate_daic_woz
 from qr_depression_severity.models.factory import (
-    build_modern_model,
+    build_collator,
+    build_model,
     build_tokenizers,
     place_model_on_configured_devices,
 )
@@ -75,19 +75,14 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
     tracker = build_tracker(config.tracking, run_dir, config.model_dump(mode="json"))
     write_tracking_metadata(run_dir, tracker.run_metadata())
     try:
-        model = build_modern_model(config)
+        model = build_model(config)
         warm_start = apply_warm_start(model, config)
         if warm_start is not None:
             write_warm_start_provenance(run_dir, warm_start.as_dict())
         device = place_model_on_configured_devices(model, config)
         write_trainable_parameters(run_dir, model)
         adapted_tokenizer, semantic_tokenizer = build_tokenizers(config)
-        collator = ModernQrCollator(
-            adapted_tokenizer,
-            semantic_tokenizer,
-            config.data.max_qr_pairs,
-            config.data.max_tokens,
-        )
+        collator = build_collator(config, adapted_tokenizer, semantic_tokenizer)
         train_loader = _data_loader(config, collator, "train", shuffle=True)
         dev_loader = _data_loader(config, collator, "dev", shuffle=False)
         effective_split_ids = _effective_split_ids(
@@ -143,7 +138,7 @@ def train_experiment(config: ExperimentConfig) -> TrainingResult:
 
 def _data_loader(
     config: ExperimentConfig,
-    collator: ModernQrCollator,
+    collator: object,
     split: str,
     shuffle: bool,
 ) -> DataLoader:

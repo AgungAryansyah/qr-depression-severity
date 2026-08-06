@@ -1,6 +1,9 @@
+from types import SimpleNamespace
+
 import torch
 from torch import nn
 
+from qr_depression_severity.models import factory
 from qr_depression_severity.models.factory import EndToEndModernModel
 from qr_depression_severity.models.modern import (
     BranchFusion,
@@ -52,6 +55,15 @@ def test_end_to_end_model_consumes_collator_tensor_shape() -> None:
     assert output["ordinal_logits"].shape == (1, 4)
     assert adapted_encoder.batch_sizes == [1, 1, 1, 1]
     assert semantic_encoder.batch_sizes == [1, 1, 1, 1]
+
+
+def test_build_model_routes_the_modern_family(monkeypatch) -> None:
+    expected = nn.Linear(1, 1)
+    monkeypatch.setattr(factory, "build_modern_model", lambda config: expected)
+
+    model = factory.build_model(SimpleNamespace(model=SimpleNamespace(family="modern")))
+
+    assert model is expected
 
 
 def _branch(encoder: nn.Module) -> SeparateQrEncoder:
