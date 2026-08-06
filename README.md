@@ -16,6 +16,11 @@ valid QR pair per interview. Empty cleaned turns are discarded before QR
 pairing; training fails before optimization on a missing transcript or
 malformed interview rather than silently changing the study population.
 
+The three official transcripts without Ellie turns (451, 458, and 480) are
+retained as a single response-only pair. The fixed comparison rules and
+published-baseline discrepancies are in
+[the controlled experiment protocol](docs/controlled_experiment_protocol.md).
+
 ## Setup
 
 Install [uv](https://docs.astral.sh/uv/), then create the pinned Python 3.13
