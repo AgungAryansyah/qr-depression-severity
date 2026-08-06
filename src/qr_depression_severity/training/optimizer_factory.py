@@ -1,4 +1,4 @@
-"""Optimizer construction for the modern QR model."""
+"""Optimizer construction for QR models."""
 
 import torch
 from torch import nn
@@ -53,5 +53,7 @@ def _parameter_group(name: str) -> str:
     if name.startswith("interview_model.regression_head") or name.startswith(
         "interview_model.ordinal_head"
     ):
+        return "heads"
+    if name.startswith("head."):
         return "heads"
     raise ValueError(f"Cannot assign trainable parameter to an optimizer group: {name}")

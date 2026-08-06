@@ -137,6 +137,20 @@ def test_loads_small_dual_branch_configuration() -> None:
     assert config.model.interview_encoder.feedforward_size == 256
 
 
+def test_loads_simple_frozen_mpnet_configuration() -> None:
+    config = load_experiment_config(
+        Path("configs/experiments/simple/frozen_mpnet_mean.yaml")
+    )
+
+    assert config.model.family == "simple"
+    assert config.model.adapted_encoder is not None
+    assert config.model.adapted_encoder.method == "frozen"
+    assert config.model.semantic_encoder is not None
+    assert not config.model.semantic_encoder.enabled
+    assert config.model.heads is not None
+    assert config.model.heads.ordinal_loss == "none"
+
+
 def test_loads_small_core_ablation_study() -> None:
     study = load_ablation_study(Path("configs/ablations/core_small.yaml"))
 

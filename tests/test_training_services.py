@@ -148,6 +148,16 @@ def test_optimizer_groups_every_trainable_parameter_once() -> None:
     }
 
 
+def test_optimizer_groups_the_simple_head() -> None:
+    config = load_experiment_config(
+        Path("configs/experiments/simple/frozen_mpnet_mean.yaml")
+    )
+    optimizer = build_optimizer(_SimpleHeadModel(), config.training.optimizer)
+
+    assert [group["name"] for group in optimizer.param_groups] == ["heads"]
+    assert optimizer.param_groups[0]["lr"] == 3.0e-4
+
+
 def test_linear_scheduler_warms_up_then_decays() -> None:
     parameter = nn.Parameter(torch.ones(1))
     optimizer = torch.optim.AdamW([parameter], lr=1.0)
@@ -195,3 +205,9 @@ class _GroupedToyModel(nn.Module):
         self.interview_model.interview_encoder = nn.Linear(1, 1)
         self.interview_model.regression_head = nn.Linear(1, 1)
         self.interview_model.ordinal_head = nn.Linear(1, 1)
+
+
+class _SimpleHeadModel(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.head = nn.Linear(1, 1)

@@ -19,6 +19,7 @@ from qr_depression_severity.models.qr_encoder import (
     PooledTokenEncoder,
     SeparateQrEncoder,
 )
+from qr_depression_severity.models.simple import SimpleDepressionModel
 
 
 class EndToEndModernModel(nn.Module):
@@ -132,6 +133,8 @@ class EndToEndModernModel(nn.Module):
 def build_model(config: ExperimentConfig) -> nn.Module:
     if config.model.family == "modern":
         return build_modern_model(config)
+    if config.model.family == "simple":
+        return build_simple_model(config)
     raise ValueError(f"Unsupported model family: {config.model.family}")
 
 
@@ -140,6 +143,14 @@ def build_collator(
     adapted_tokenizer: object,
     semantic_tokenizer: object | None,
 ) -> object:
+    if config.model.family == "simple":
+        from qr_depression_severity.data.collators import SimpleQrCollator
+
+        return SimpleQrCollator(
+            adapted_tokenizer,
+            config.data.max_qr_pairs,
+            config.data.max_tokens,
+        )
     if config.model.family != "modern":
         raise ValueError(f"Unsupported model family: {config.model.family}")
     from qr_depression_severity.data.collators import ModernQrCollator
@@ -258,6 +269,20 @@ def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
     )
 
 
+def build_simple_model(config: ExperimentConfig) -> SimpleDepressionModel:
+    adapted = _required(config.model.adapted_encoder, "adapted_encoder")
+    if adapted.method != "frozen":
+        raise ValueError("Simple model requires a frozen adapted encoder")
+    from transformers import AutoModel
+
+    encoder = AutoModel.from_pretrained(adapted.name, revision=adapted.revision)
+    return SimpleDepressionModel(
+        PooledTokenEncoder(encoder, frozen=True, normalize=False),
+        encoder.config.hidden_size,
+        config.model.execution.qr_encoder_micro_batch_size,
+    )
+
+
 def place_model_on_configured_devices(
     model: nn.Module, config: ExperimentConfig
 ) -> torch.device:
@@ -271,7 +296,7 @@ def place_model_on_configured_devices(
 
 
 def build_tokenizers(config: ExperimentConfig) -> tuple[object, object | None]:
-    if config.model.family != "modern":
+    if config.model.family not in {"modern", "simple"}:
         raise ValueError(f"Unsupported model family: {config.model.family}")
     adapted = _required(config.model.adapted_encoder, "adapted_encoder")
     semantic = config.model.semantic_encoder
@@ -284,7 +309,11 @@ def build_tokenizers(config: ExperimentConfig) -> tuple[object, object | None]:
                 _required(semantic.name, "semantic_encoder.name"),
                 revision=semantic.revision,
             )
-            if semantic is not None and semantic.enabled
+            if (
+                config.model.family == "modern"
+                and semantic is not None
+                and semantic.enabled
+            )
             else None
         ),
     )

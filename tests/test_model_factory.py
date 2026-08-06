@@ -17,6 +17,7 @@ from qr_depression_severity.models.qr_encoder import (
     PooledTokenEncoder,
     SeparateQrEncoder,
 )
+from qr_depression_severity.models.simple import SimpleDepressionModel
 
 
 def test_end_to_end_model_consumes_collator_tensor_shape() -> None:
@@ -64,6 +65,38 @@ def test_build_model_routes_the_modern_family(monkeypatch) -> None:
     model = factory.build_model(SimpleNamespace(model=SimpleNamespace(family="modern")))
 
     assert model is expected
+
+
+def test_build_model_routes_the_simple_family(monkeypatch) -> None:
+    expected = nn.Linear(1, 1)
+    monkeypatch.setattr(factory, "build_simple_model", lambda config: expected)
+
+    model = factory.build_model(SimpleNamespace(model=SimpleNamespace(family="simple")))
+
+    assert model is expected
+
+
+def test_simple_model_mean_pools_frozen_qr_embeddings() -> None:
+    encoder = _ToyEncoder()
+    model = SimpleDepressionModel(
+        PooledTokenEncoder(encoder, frozen=True),
+        embedding_size=2,
+        qr_encoder_micro_batch_size=1,
+    )
+
+    output = model(
+        torch.tensor([[[1, 3], [2, 4]]]),
+        torch.tensor([[[1, 1], [1, 1]]]),
+        torch.tensor([[True, True]]),
+    )
+
+    assert output["prediction"].shape == (1,)
+    assert output["ordinal_logits"] is None
+    assert encoder.batch_sizes == [1, 1]
+    assert {name for name, _ in model.named_parameters() if _.requires_grad} == {
+        "head.weight",
+        "head.bias",
+    }
 
 
 def _branch(encoder: nn.Module) -> SeparateQrEncoder:

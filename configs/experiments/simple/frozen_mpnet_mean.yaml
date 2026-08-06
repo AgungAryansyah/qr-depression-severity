@@ -1,0 +1,41 @@
+# Defines the low-capacity control: frozen sentence embeddings, mean QR pooling, and linear regression.
+extends: ../../base.yaml
+experiment:
+  name: simple-frozen-mpnet-mean
+  tags: [simple, frozen, mpnet, mean-pooling, linear-head]
+model:
+  family: simple
+  execution:
+    qr_encoder_micro_batch_size: 4
+    adapted_device: cuda:0
+    semantic_device: cuda:0
+  adapted_encoder:
+    name: sentence-transformers/all-mpnet-base-v2
+    method: frozen
+    revision: d342065f39c3d6c13ae0a10647a53be6bc803889
+    pooling: masked_mean
+    gradient_checkpointing: false
+  semantic_encoder:
+    enabled: false
+  heads:
+    regression_loss: mse
+    huber_delta: 2.0
+    ordinal_loss: none
+    ordinal_loss_weight: 0.0
+    dropout: 0.0
+training:
+  max_epochs: 200
+  batch_size: 2
+  precision: bf16
+  optimizer:
+    name: adamw
+    adapted_encoder_peft_learning_rate: 3.0e-4
+    semantic_projection_learning_rate: 3.0e-4
+    qr_fusion_learning_rate: 3.0e-4
+    interview_encoder_learning_rate: 3.0e-4
+    heads_learning_rate: 3.0e-4
+  scheduler:
+    name: linear
+  early_stopping:
+    monitor: dev_rmse
+    patience: 20

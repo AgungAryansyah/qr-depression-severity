@@ -5,7 +5,7 @@ import torch
 
 from qr_depression_severity.configuration.schema import DataSettings, QrCacheSettings
 from qr_depression_severity.data import loading as loading_module
-from qr_depression_severity.data.collators import ModernQrCollator
+from qr_depression_severity.data.collators import ModernQrCollator, SimpleQrCollator
 from qr_depression_severity.data.loading import InterviewExample, _read_transcript
 from qr_depression_severity.data.qr_pairing import QrPair, TranscriptTurn
 from qr_depression_severity.data.splits import ValidatedSplits
@@ -54,6 +54,17 @@ def test_collator_omits_semantic_inputs_when_disabled() -> None:
 
     assert "semantic_question_input_ids" not in batch
     assert len(adapted.calls) == 2
+
+
+def test_simple_collator_combines_question_and_response() -> None:
+    tokenizer = _Tokenizer()
+    collator = SimpleQrCollator(tokenizer, max_qr_pairs=2, max_tokens=4)
+
+    batch = collator([_example(300, 2.0, 1)])
+
+    assert tokenizer.calls == [["question-0 [SEP] response-0"]]
+    assert batch["simple_input_ids"].shape == (1, 1, 2)
+    assert "adapted_question_input_ids" not in batch
 
 
 def test_transcript_reader_preserves_turn_metadata(tmp_path: Path) -> None:
@@ -193,6 +204,7 @@ def _example(participant_id: int, target: float, pair_count: int) -> InterviewEx
 class _Tokenizer:
     def __init__(self) -> None:
         self.calls: list[list[str]] = []
+        self.sep_token = "[SEP]"
 
     def __call__(self, texts: list[str], **_: object) -> dict[str, torch.Tensor]:
         self.calls.append(texts)
