@@ -123,12 +123,13 @@ predictions, and transcript-derived data remain local.
 
 Results are written to `outputs/ablations/<study-name>/`:
 
-- `screening.json`: candidate runs, finalists, and data-availability warnings.
+- `screening.json`: candidate runs and finalists.
 - `confirmation.json`: finalist metrics, selected checkpoint, and paired statistics.
 - `test.json`: the one approved test evaluation.
 - `candidates/`: timestamped seed run directories with resolved config,
   parameter report, checkpoint, metrics, and local prediction files.
 
 Check `data_availability.json` in each seed directory before interpreting any
-metric. Missing transcripts, skipped interviews, or incomplete official split
-membership make a result non-reportable.
+metric. Training now fails on missing transcripts, empty cleaned turns, or
+interviews without valid QR pairs, so a completed run must retain every
+official participant.

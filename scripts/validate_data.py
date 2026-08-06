@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from qr_depression_severity.configuration.loader import load_experiment_config
-from qr_depression_severity.data.splits import validate_daic_woz
+from qr_depression_severity.data.loading import load_interviews
 
 
 def main() -> None:
@@ -12,10 +12,13 @@ def main() -> None:
     parser.add_argument("--config", type=Path, required=True)
     arguments = parser.parse_args()
     config = load_experiment_config(arguments.config)
-    splits = validate_daic_woz(config.data)
+    settings = config.data.model_copy(
+        update={"qr_cache": config.data.qr_cache.model_copy(update={"enabled": False})}
+    )
     print(
         ", ".join(
-            f"{split}={len(ids)}" for split, ids in splits.participant_ids.items()
+            f"{split}={len(load_interviews(settings, split))}"
+            for split in ("train", "dev", "test")
         )
     )
 

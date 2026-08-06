@@ -2,7 +2,6 @@
 
 import csv
 import json
-import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -24,18 +23,6 @@ class ValidatedSplits:
 def validate_daic_woz(settings: DataSettings) -> ValidatedSplits:
     manifest = _load_manifest(settings.split_file)
     _validate_manifest(manifest)
-    configured_missing = set(settings.allowed_missing_transcript_ids)
-    official_ids = {
-        participant_id
-        for participant_ids in manifest.values()
-        for participant_id in participant_ids
-    }
-    unknown_missing = configured_missing - official_ids
-    if unknown_missing:
-        raise ValueError(
-            "Configured missing transcripts are not official IDs: "
-            f"{sorted(unknown_missing)}"
-        )
     available_ids: dict[str, tuple[int, ...]] = {}
     for split, expected_ids in manifest.items():
         source_path = settings.root / SPLIT_FILENAMES[split]
@@ -45,7 +32,7 @@ def validate_daic_woz(settings: DataSettings) -> ValidatedSplits:
                 f"{split} split does not match official membership: {source_path}"
             )
         available_ids[split] = _validate_required_files(
-            settings.root, split, expected_ids, configured_missing
+            settings.root, split, expected_ids
         )
     if settings.test_labels_file is not None:
         _validate_test_labels(settings.test_labels_file, manifest["test"])
@@ -107,30 +94,16 @@ def _read_participant_ids(path: Path) -> list[int]:
 
 
 def _validate_required_files(
-    root: Path, split: str, participant_ids: list[int], configured_missing: set[int]
+    root: Path, split: str, participant_ids: list[int]
 ) -> tuple[int, ...]:
     missing = [
         participant_id
         for participant_id in participant_ids
         if not (root / f"{participant_id}_TRANSCRIPT.csv").is_file()
     ]
-    unexpected = set(missing) - configured_missing
-    if unexpected:
-        raise FileNotFoundError(
-            f"{split} split is missing transcripts: {sorted(unexpected)}"
-        )
     if missing:
-        warnings.warn(
-            f"Skipping missing {split} transcripts {missing}; "
-            "restore them before reporting results.",
-            RuntimeWarning,
-            stacklevel=2,
-        )
-    return tuple(
-        participant_id
-        for participant_id in participant_ids
-        if participant_id not in missing
-    )
+        raise FileNotFoundError(f"{split} split is missing transcripts: {missing}")
+    return tuple(participant_ids)
 
 
 def _validate_test_labels(path: Path, expected_ids: list[int]) -> None:

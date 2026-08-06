@@ -17,6 +17,7 @@ def test_loads_composed_experiment_config() -> None:
 
     assert config.experiment.name == "modern-dora-e5-transformer"
     assert config.data.dataset == "daic_woz"
+    assert config.data.root == Path("data")
     assert config.data.qr_cache.enabled
     assert config.tracking.backend == "wandb"
     assert config.tracking.mode == "online"

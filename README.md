@@ -11,10 +11,10 @@ unit tests. No DAIC-WOZ training run, five-seed result, or test metric has been
 verified in this repository. Do not report performance claims until the
 protocol below has been completed.
 
-The configured local dataset is missing `458_TRANSCRIPT.csv`. The base config
-skips it with a runtime warning solely as a temporary recovery bypass. Restore
-the file before reporting any result; development then contains the official 35
-subjects rather than the temporarily available 34.
+The configured dataset must contain every official transcript and at least one
+valid QR pair per interview. Training fails before optimization on a missing
+transcript, empty cleaned turn, or malformed interview rather than silently
+changing the study population.
 
 ## Setup
 
@@ -61,9 +61,12 @@ uv run python scripts/validate_data.py \
   --config configs/experiments/modern/deberta_dora_e5_transformer.yaml
 ```
 
+This cache-free command validates official membership, required files, and QR
+extractability for train, development, and test.
+
 The committed `configs/data/official_daic_woz.json` is the authoritative
-107/35/47 partition manifest. Changed membership, overlap, or an unapproved
-missing transcript fails explicitly.
+107/35/47 partition manifest. Changed membership, overlap, or any missing
+transcript fails explicitly.
 
 ## Configuration
 

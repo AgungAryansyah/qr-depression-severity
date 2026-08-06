@@ -19,7 +19,7 @@ from qr_depression_severity.data.splits import (
     validate_daic_woz,
 )
 
-_QR_CACHE_VERSION = 1
+_QR_CACHE_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -38,13 +38,6 @@ def load_interviews(settings: DataSettings, split: str) -> list[InterviewExample
     for participant_id in validated.participant_ids[split]:
         transcript_path = settings.root / f"{participant_id}_TRANSCRIPT.csv"
         pairs = _load_qr_pairs(settings, participant_id, transcript_path)
-        if not pairs:
-            warnings.warn(
-                f"Skipping participant {participant_id}: no valid QR pairs",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            continue
         interviews.append(
             InterviewExample(participant_id, scores[participant_id], tuple(pairs))
         )
@@ -59,6 +52,8 @@ def _load_qr_pairs(
         cache_path = settings.qr_cache.directory / f"{participant_id}.json"
         cached = _read_qr_cache(cache_path, participant_id, signature)
         if cached is not None:
+            if not cached:
+                raise ValueError(f"Participant {participant_id} has no valid QR pairs")
             return cached
     pairs = extract_qr_pairs(
         participant_id, _read_transcript(transcript_path), settings.preprocessing

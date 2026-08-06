@@ -70,7 +70,9 @@ def test_transcript_reader_preserves_turn_metadata(tmp_path: Path) -> None:
     assert turns[0].end_time == 1.0
 
 
-def test_loader_skips_interviews_without_qr_pairs(monkeypatch, tmp_path: Path) -> None:
+def test_loader_rejects_interviews_without_qr_pairs(
+    monkeypatch, tmp_path: Path
+) -> None:
     monkeypatch.setattr(
         loading_module,
         "validate_daic_woz",
@@ -87,15 +89,13 @@ def test_loader_skips_interviews_without_qr_pairs(monkeypatch, tmp_path: Path) -
         lambda path: [TranscriptTurn("Participant", "opening")],
     )
 
-    with pytest.warns(RuntimeWarning, match="participant 300"):
-        interviews = loading_module.load_interviews(
+    with pytest.raises(ValueError, match="Participant 300 has no valid QR pairs"):
+        loading_module.load_interviews(
             DataSettings(
                 dataset="daic_woz", root=tmp_path, split_file=Path("splits.json")
             ),
             "train",
         )
-
-    assert interviews == []
 
 
 def test_loader_reuses_qr_cache(monkeypatch, tmp_path: Path) -> None:
@@ -147,6 +147,31 @@ def test_loader_reuses_qr_cache(monkeypatch, tmp_path: Path) -> None:
     assert third[0].qr_pairs[0].question == "Question"
     assert calls == 2
     assert (settings.qr_cache.directory / "300.json").is_file()
+
+
+def test_loader_rejects_empty_qr_cache(monkeypatch, tmp_path: Path) -> None:
+    transcript = tmp_path / "300_TRANSCRIPT.csv"
+    transcript.touch()
+    settings = DataSettings(
+        dataset="daic_woz",
+        root=tmp_path,
+        split_file=Path("splits.json"),
+        qr_cache=QrCacheSettings(enabled=True, directory=tmp_path / "qr-cache"),
+    )
+    monkeypatch.setattr(
+        loading_module,
+        "validate_daic_woz",
+        lambda settings: ValidatedSplits({"train": (300,), "dev": (), "test": ()}),
+    )
+    monkeypatch.setattr(
+        loading_module,
+        "_load_split_scores",
+        lambda settings, split: {300: 2.0},
+    )
+    monkeypatch.setattr(loading_module, "_read_qr_cache", lambda *args: [])
+
+    with pytest.raises(ValueError, match="Participant 300 has no valid QR pairs"):
+        loading_module.load_interviews(settings, "train")
 
 
 def _example(participant_id: int, target: float, pair_count: int) -> InterviewExample:

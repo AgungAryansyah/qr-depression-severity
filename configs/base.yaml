@@ -14,7 +14,6 @@ data:
     normalize_whitespace: true
   max_qr_pairs: 128
   max_tokens: 256
-  allowed_missing_transcript_ids: [458]
   qr_cache:
     enabled: true
     directory: cache/qr_pairs

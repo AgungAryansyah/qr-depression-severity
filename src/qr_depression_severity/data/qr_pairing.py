@@ -1,7 +1,6 @@
 """Question-response extraction from DAIC-WOZ transcript turns."""
 
 import re
-import warnings
 from dataclasses import dataclass
 
 from qr_depression_severity.configuration.schema import PreprocessingSettings
@@ -34,7 +33,6 @@ def extract_qr_pairs(
     pairs: list[QrPair] = []
     question_turns: list[TranscriptTurn] = []
     response_turns: list[TranscriptTurn] = []
-    skipped_empty_turns = 0
 
     def emit_pair() -> None:
         if not question_turns or not response_turns:
@@ -51,13 +49,15 @@ def extract_qr_pairs(
             )
         )
 
-    for turn in turns:
+    for turn_index, turn in enumerate(turns):
         if turn.speaker not in {"Ellie", "Participant"}:
             raise ValueError(f"Unsupported speaker: {turn.speaker}")
         normalized = _normalize_turn(turn, preprocessing)
         if normalized is None:
-            skipped_empty_turns += 1
-            continue
+            raise ValueError(
+                f"Empty {turn.speaker} turn at index {turn_index} for participant "
+                f"{participant_id}"
+            )
         if normalized.speaker == "Ellie":
             if response_turns:
                 emit_pair()
@@ -69,13 +69,8 @@ def extract_qr_pairs(
             if question_turns:
                 response_turns.append(normalized)
     emit_pair()
-    if skipped_empty_turns:
-        warnings.warn(
-            f"Skipped {skipped_empty_turns} empty transcript turn(s) for "
-            f"participant {participant_id}",
-            RuntimeWarning,
-            stacklevel=2,
-        )
+    if not pairs:
+        raise ValueError(f"Participant {participant_id} has no valid QR pairs")
     return pairs
 
 
