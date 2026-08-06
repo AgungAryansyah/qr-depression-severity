@@ -19,7 +19,7 @@ from qr_depression_severity.data.splits import (
     validate_daic_woz,
 )
 
-_QR_CACHE_VERSION = 2
+_QR_CACHE_VERSION = 3
 
 
 @dataclass(frozen=True)

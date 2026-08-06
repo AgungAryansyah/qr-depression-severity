@@ -69,10 +69,11 @@ For each branch its tensors have this layout:
 ```
 
 `qr_mask` marks real QR pairs. Token attention masks mark real tokens within
-each question or response. Empty cleaned turns and interviews without valid
-pairs fail validation so a local data problem cannot change the population.
-Processed QR pairs can be cached locally; the cache is keyed by transcript
-metadata and preprocessing settings, and never belongs in version control.
+each question or response. Empty cleaned turns are discarded before QR pairing;
+interviews without valid pairs fail validation so a local data problem cannot
+change the population. Processed QR pairs can be cached locally; the cache is
+keyed by transcript metadata and preprocessing settings, and never belongs in
+version control.
 
 The current configuration supports at most `data.max_qr_pairs` pairs per
 interview (128 by default). Exceeding that limit raises an error instead of

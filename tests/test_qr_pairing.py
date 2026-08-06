@@ -43,17 +43,20 @@ def test_never_uses_participant_turn_as_a_question() -> None:
     assert pairs[0].response == "answer"
 
 
-def test_rejects_empty_turns() -> None:
-    with pytest.raises(ValueError, match="Empty Ellie turn at index 0"):
-        extract_qr_pairs(
-            300,
-            [
-                TranscriptTurn("Ellie", "  "),
-                TranscriptTurn("Ellie", "question"),
-                TranscriptTurn("Participant", "answer"),
-            ],
-            PreprocessingSettings(),
-        )
+def test_drops_empty_turns() -> None:
+    pairs = extract_qr_pairs(
+        300,
+        [
+            TranscriptTurn("Ellie", "  "),
+            TranscriptTurn("Ellie", "question"),
+            TranscriptTurn("Participant", "answer"),
+        ],
+        PreprocessingSettings(),
+    )
+
+    assert [(pair.question, pair.response) for pair in pairs] == [
+        ("question", "answer")
+    ]
 
 
 def test_rejects_unknown_turns() -> None:

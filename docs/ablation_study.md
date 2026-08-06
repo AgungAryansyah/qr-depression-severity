@@ -130,6 +130,6 @@ Results are written to `outputs/ablations/<study-name>/`:
   parameter report, checkpoint, metrics, and local prediction files.
 
 Check `data_availability.json` in each seed directory before interpreting any
-metric. Training now fails on missing transcripts, empty cleaned turns, or
-interviews without valid QR pairs, so a completed run must retain every
+metric. Training discards empty cleaned turns, but fails on missing transcripts
+or interviews without valid QR pairs, so a completed run must retain every
 official participant.

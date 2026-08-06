@@ -12,9 +12,9 @@ verified in this repository. Do not report performance claims until the
 protocol below has been completed.
 
 The configured dataset must contain every official transcript and at least one
-valid QR pair per interview. Training fails before optimization on a missing
-transcript, empty cleaned turn, or malformed interview rather than silently
-changing the study population.
+valid QR pair per interview. Empty cleaned turns are discarded before QR
+pairing; training fails before optimization on a missing transcript or
+malformed interview rather than silently changing the study population.
 
 ## Setup
 

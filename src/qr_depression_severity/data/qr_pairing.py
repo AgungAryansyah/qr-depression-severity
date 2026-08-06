@@ -49,15 +49,12 @@ def extract_qr_pairs(
             )
         )
 
-    for turn_index, turn in enumerate(turns):
+    for turn in turns:
         if turn.speaker not in {"Ellie", "Participant"}:
             raise ValueError(f"Unsupported speaker: {turn.speaker}")
         normalized = _normalize_turn(turn, preprocessing)
         if normalized is None:
-            raise ValueError(
-                f"Empty {turn.speaker} turn at index {turn_index} for participant "
-                f"{participant_id}"
-            )
+            continue
         if normalized.speaker == "Ellie":
             if response_turns:
                 emit_pair()
