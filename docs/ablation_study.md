@@ -1,6 +1,6 @@
 # QR depression-severity ablation studies
 
-The repository has two controlled QR-model studies. Development data selects
+The repository has three controlled QR-model studies. Development data selects
 the candidate; test is a single final evaluation and is never used to choose a
 model, seed, or hyperparameter.
 
@@ -8,9 +8,10 @@ model, seed, or hyperparameter.
 | --- | --- | --- | --- |
 | Full modern | `configs/ablations/core.yaml` | `core-modern` | Tests all planned representation, adaptation, objective, and warm-start axes. |
 | Small dual-branch | `configs/ablations/core_small.yaml` | `core-modern-small` | Tests the core representation axes after reducing both backbones and learned layers. |
+| Simple input | `configs/ablations/simple_input.yaml` | `simple-input` | Tests QR input against participant-response-only input with the same frozen encoder and linear head. |
 
 The QR-fusion-only `deberta_dora_e5_transformer_compact.yaml` is a standalone
-capacity variant. It is not part of either controlled study.
+capacity variant. It is not part of a controlled study.
 
 ## Current provisional protocol
 
@@ -86,6 +87,28 @@ The study deliberately excludes loss and warm-start axes for now.
 | `fusion-scalar-gate` | branch fusion | Uses one learned gate per QR pair. |
 | `transformer-1layer` | interview encoder | Reduces the compact Transformer to one layer. |
 
+## Simple input candidate matrix
+
+Both candidates use frozen `all-mpnet-base-v2`, mean QR pooling, and a linear
+regression head. They differ only in `data.input_mode`.
+
+| Candidate | Axis | Change |
+| --- | --- | --- |
+| `qr` | reference | Encodes each question and response together. |
+| `response-only` | input | Encodes only participant responses. |
+
+Screening uses seed `0`; confirmation uses seeds `0` through `4`. Run
+screening and confirmation separately, then reserve test for the selected
+candidate:
+
+```bash
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/simple_input.yaml --phase screen
+
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/simple_input.yaml --phase confirm
+```
+
 ## Selection and formal protocol
 
 Screening runs every candidate. The reference and the lowest-development-RMSE
@@ -117,8 +140,7 @@ after `test.json` exists.
 ## Tracking and artifacts
 
 Each candidate, phase, and seed is a separate W&B run named
-`<candidate>-<phase>-seed-<seed>`. The study group distinguishes full modern
-from small dual-branch runs. Tracking logs metrics only; checkpoints,
+`<candidate>-<phase>-seed-<seed>`. Tracking logs metrics only; checkpoints,
 predictions, and transcript-derived data remain local.
 
 Results are written to `outputs/ablations/<study-name>/`:

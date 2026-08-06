@@ -117,6 +117,22 @@ uv run python scripts/train.py \
   --config configs/experiments/modern/deberta_dora_e5_transformer_small.yaml
 ```
 
+### Frozen mean-pooling control
+
+`frozen_mpnet_mean.yaml` keeps `all-mpnet-base-v2` frozen, mean-pools QR
+embeddings, and trains only a linear regression head. The paired
+`simple_input.yaml` study changes only whether Ellie questions are included:
+
+```bash
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/simple_input.yaml --phase screen
+
+uv run python scripts/run_ablation.py \
+  --config configs/ablations/simple_input.yaml --phase confirm
+```
+
+Reserve `--phase test` for the candidate selected by confirmation.
+
 ## Training and evaluation protocol
 
 CUDA is required by the default `bf16` configuration. CPU is supported for the
@@ -161,8 +177,9 @@ not be used for model, seed, threshold, or hyperparameter selection.
 The core modern matrix compares adapted encoder method, semantic-branch
 presence, branch fusion, Transformer depth, regression/ordinal objective, and
 warm start. `core_small.yaml` applies the adaptation, semantic, fusion, and
-Transformer-depth axes to the smaller dual-branch profile. Neither study
-restores the retired paper reproduction model.
+Transformer-depth axes to the smaller dual-branch profile. `simple_input.yaml`
+compares QR and response-only input with the frozen mean-pooling model. None
+of these studies restores the retired paper reproduction model.
 See [the ablation-study guide](docs/ablation_study.md) for the full candidate
 matrix, W&B grouping, recovery phases, and result files.
 
