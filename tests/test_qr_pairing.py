@@ -43,6 +43,23 @@ def test_never_uses_participant_turn_as_a_question() -> None:
     assert pairs[0].response == "answer"
 
 
+def test_uses_response_only_pair_for_known_missing_ellie_transcript() -> None:
+    pairs = extract_qr_pairs(
+        451,
+        [
+            TranscriptTurn("Participant", "Opening", 0.0, 1.0),
+            TranscriptTurn("Participant", "response", 1.0, 2.0),
+        ],
+        PreprocessingSettings(),
+    )
+
+    assert [(pair.question, pair.response, pair.question_type) for pair in pairs] == [
+        ("", "opening response", "missing_ellie")
+    ]
+    assert pairs[0].start_time == 0.0
+    assert pairs[0].end_time == 2.0
+
+
 def test_drops_empty_turns() -> None:
     pairs = extract_qr_pairs(
         300,

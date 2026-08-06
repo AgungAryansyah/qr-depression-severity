@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 from qr_depression_severity.configuration.schema import PreprocessingSettings
 
+MISSING_ELLIE_PARTICIPANT_IDS = frozenset({451, 458, 480})
+
 
 @dataclass(frozen=True)
 class TranscriptTurn:
@@ -33,6 +35,8 @@ def extract_qr_pairs(
     pairs: list[QrPair] = []
     question_turns: list[TranscriptTurn] = []
     response_turns: list[TranscriptTurn] = []
+    participant_turns: list[TranscriptTurn] = []
+    has_ellie_turn = False
 
     def emit_pair() -> None:
         if not question_turns or not response_turns:
@@ -56,6 +60,7 @@ def extract_qr_pairs(
         if normalized is None:
             continue
         if normalized.speaker == "Ellie":
+            has_ellie_turn = True
             if response_turns:
                 emit_pair()
                 question_turns = [normalized]
@@ -63,9 +68,27 @@ def extract_qr_pairs(
             else:
                 question_turns.append(normalized)
         elif normalized.speaker == "Participant":
+            participant_turns.append(normalized)
             if question_turns:
                 response_turns.append(normalized)
     emit_pair()
+    if (
+        not pairs
+        and participant_id in MISSING_ELLIE_PARTICIPANT_IDS
+        and not has_ellie_turn
+        and participant_turns
+    ):
+        pairs.append(
+            QrPair(
+                question="",
+                response=" ".join(turn.text for turn in participant_turns),
+                qr_index=0,
+                participant_id=participant_id,
+                question_type="missing_ellie",
+                start_time=participant_turns[0].start_time,
+                end_time=participant_turns[-1].end_time,
+            )
+        )
     if not pairs:
         raise ValueError(f"Participant {participant_id} has no valid QR pairs")
     return pairs
