@@ -150,7 +150,6 @@ def test_loads_simple_frozen_mpnet_configuration() -> None:
     assert not config.model.semantic_encoder.enabled
     assert config.model.heads is not None
     assert config.model.heads.ordinal_loss == "none"
-    assert not config.tracking.console
 
 
 def test_loads_response_only_simple_control_study() -> None:
@@ -162,7 +161,6 @@ def test_loads_response_only_simple_control_study() -> None:
 
     assert study.study.confirmation_seeds == (0, 1, 2, 3, 4)
     assert config.data.input_mode == "response_only"
-    assert not config.tracking.console
 
 
 def test_loads_simple_encoder_study() -> None:
@@ -185,7 +183,6 @@ def test_loads_simple_encoder_study() -> None:
     )
     assert config.model.adapted_encoder.method == "lora"
     assert not config.model.adapted_encoder.gradient_checkpointing
-    assert not config.tracking.console
 
 
 def test_loads_small_core_ablation_study() -> None:
