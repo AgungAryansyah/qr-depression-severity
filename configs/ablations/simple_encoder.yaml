@@ -1,0 +1,16 @@
+study:
+  name: simple-encoder
+  output_dir: outputs/ablations
+  screening_seeds: [0]
+  confirmation_seeds: [0, 1, 2, 3, 4]
+  bootstrap_samples: 10000
+  permutation_samples: 10000
+  significance_seed: 2026
+candidates:
+  - id: frozen-mpnet
+    axis: encoder
+    config: ../experiments/simple/frozen_mpnet_mean.yaml
+    reference: true
+  - id: lora-deberta
+    axis: encoder
+    config: ../experiments/simple/peft_deberta_lora_mean.yaml

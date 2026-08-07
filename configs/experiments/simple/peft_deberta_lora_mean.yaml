@@ -1,0 +1,15 @@
+# Replaces the frozen MPNet encoder with LoRA-adapted DeBERTa while retaining the simple QR mean-pooling model.
+extends: frozen_mpnet_mean.yaml
+experiment:
+  name: simple-lora-deberta-mean
+  tags: [simple, lora, deberta, mean-pooling, linear-head]
+model:
+  adapted_encoder:
+    name: microsoft/deberta-v3-base
+    method: lora
+    revision: e4647970a4c145e8a616c83caeaec8493e8aaf17
+    rank: 8
+    alpha: 16
+    dropout: 0.1
+    pooling: masked_mean
+    gradient_checkpointing: true

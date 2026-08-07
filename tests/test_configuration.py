@@ -163,6 +163,27 @@ def test_loads_response_only_simple_control_study() -> None:
     assert config.data.input_mode == "response_only"
 
 
+def test_loads_simple_encoder_study() -> None:
+    study = load_ablation_study(Path("configs/ablations/simple_encoder.yaml"))
+    lora_deberta = next(
+        candidate for candidate in study.candidates if candidate.id == "lora-deberta"
+    )
+    config = load_experiment_config(lora_deberta.config)
+
+    assert [candidate.id for candidate in study.candidates] == [
+        "frozen-mpnet",
+        "lora-deberta",
+    ]
+    assert study.study.confirmation_seeds == (0, 1, 2, 3, 4)
+    assert config.model.adapted_encoder is not None
+    assert config.model.adapted_encoder.name == "microsoft/deberta-v3-base"
+    assert (
+        config.model.adapted_encoder.revision
+        == "e4647970a4c145e8a616c83caeaec8493e8aaf17"
+    )
+    assert config.model.adapted_encoder.method == "lora"
+
+
 def test_loads_small_core_ablation_study() -> None:
     study = load_ablation_study(Path("configs/ablations/core_small.yaml"))
 
