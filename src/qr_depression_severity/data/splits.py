@@ -3,6 +3,7 @@
 import csv
 import json
 from dataclasses import dataclass
+from math import isfinite
 from pathlib import Path
 
 from qr_depression_severity.configuration.schema import DataSettings
@@ -63,6 +64,8 @@ def _validate_manifest(manifest: dict[str, list[int]]) -> None:
             raise ValueError(f"{split} split IDs must be integers")
         if len(participant_ids) != expected_count:
             raise ValueError(f"{split} split must contain {expected_count} subjects")
+        if len(participant_ids) != len(set(participant_ids)):
+            raise ValueError(f"{split} split contains duplicate participant IDs")
         overlap = all_ids.intersection(participant_ids)
         if overlap:
             raise ValueError(
@@ -110,8 +113,6 @@ def _validate_test_labels(path: Path, expected_ids: list[int]) -> None:
     scores = _read_scores(path)
     if set(scores) != set(expected_ids):
         raise ValueError(f"Test labels do not match official test membership: {path}")
-    if any(score < 0 or score > 24 for score in scores.values()):
-        raise ValueError(f"Test labels must be between 0 and 24: {path}")
 
 
 def _read_scores(path: Path) -> dict[int, float]:
@@ -126,9 +127,20 @@ def _read_scores(path: Path) -> dict[int, float]:
                 raise ValueError(
                     f"Label file lacks participant ID or PHQ score: {path}"
                 )
-            return {
-                int(row[participant_column]): float(row[score_column]) for row in reader
+            rows = list(reader)
+            scores = {
+                int(row[participant_column]): float(row[score_column]) for row in rows
             }
+            if len(scores) != len(rows):
+                raise ValueError(f"Label file has duplicate participant IDs: {path}")
+            if any(
+                not isfinite(score) or not 0 <= score <= 24
+                for score in scores.values()
+            ):
+                raise ValueError(
+                    f"PHQ-8 scores must be finite and between 0 and 24: {path}"
+                )
+            return scores
     except FileNotFoundError as error:
         raise FileNotFoundError(f"Test labels are missing: {path}") from error
 
