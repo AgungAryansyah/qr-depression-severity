@@ -47,8 +47,6 @@ class AdaptedEncoderSettings(StrictModel):
     rank: int | None = Field(default=None, ge=1)
     alpha: int | None = Field(default=None, ge=1)
     dropout: float | None = Field(default=None, ge=0, le=1)
-    pooling: Literal["masked_mean", "cls", "attention"] | None = None
-    target_modules: tuple[str, ...] | None = None
     gradient_checkpointing: bool = False
 
 
@@ -57,7 +55,6 @@ class SemanticEncoderSettings(StrictModel):
     revision: str | None = None
     enabled: bool = True
     frozen: bool | None = None
-    pooling: Literal["masked_mean", "cls", "attention"] | None = None
     normalize: bool | None = None
 
 
@@ -66,7 +63,6 @@ class QrFusionSettings(StrictModel):
     hidden_size: int | None = Field(default=None, ge=1)
     intermediate_size: int | None = Field(default=None, ge=1)
     dropout: float | None = Field(default=None, ge=0, le=1)
-    heads: int | None = Field(default=None, ge=1)
 
 
 class BranchFusionSettings(StrictModel):
@@ -78,8 +74,6 @@ class BranchFusionSettings(StrictModel):
 class InterviewEncoderSettings(StrictModel):
     name: str
     layers: int | None = Field(default=None, ge=1)
-    hidden_size: int | None = Field(default=None, ge=1)
-    attention: bool | None = None
     heads: int | None = Field(default=None, ge=1)
     feedforward_size: int | None = Field(default=None, ge=1)
     dropout: float | None = Field(default=None, ge=0, le=1)
@@ -153,10 +147,6 @@ class TrainingSettings(StrictModel):
     )
 
 
-class EvaluationSettings(StrictModel):
-    metrics: tuple[str, ...]
-
-
 class TrackingSettings(StrictModel):
     backend: Literal["wandb", "local", "disabled"]
     mode: Literal["online", "offline", "disabled"]
@@ -169,8 +159,6 @@ class TrackingSettings(StrictModel):
     notes: str | None = None
     log_model: bool = False
     log_predictions: bool = False
-    log_attention: bool = False
-    watch_model: bool = False
     console: bool = False
     console_every_n_batches: int = Field(default=1, ge=1)
     dotenv_path: Path = Path(".env")
@@ -182,5 +170,4 @@ class ExperimentConfig(StrictModel):
     data: DataSettings
     model: ModelSettings
     training: TrainingSettings
-    evaluation: EvaluationSettings
     tracking: TrackingSettings

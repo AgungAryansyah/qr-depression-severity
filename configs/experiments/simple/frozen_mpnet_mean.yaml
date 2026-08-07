@@ -13,7 +13,6 @@ model:
     name: sentence-transformers/all-mpnet-base-v2
     method: frozen
     revision: d342065f39c3d6c13ae0a10647a53be6bc803889
-    pooling: masked_mean
     gradient_checkpointing: false
   semantic_encoder:
     enabled: false

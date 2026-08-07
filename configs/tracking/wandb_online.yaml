@@ -10,8 +10,6 @@ tracking:
   tags: [daic-woz]
   log_model: false
   log_predictions: false
-  log_attention: false
-  watch_model: false
   console: true
   console_every_n_batches: 1
   dotenv_path: .env

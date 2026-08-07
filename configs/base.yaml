@@ -1,4 +1,4 @@
-# Supplies the shared dataset, training, evaluation, and global tracking defaults for all experiments.
+# Supplies the shared dataset, training, and global tracking defaults for all experiments.
 extends: tracking/global.yaml
 experiment:
   name: base
@@ -42,5 +42,3 @@ training:
     monitor: dev_rmse
     patience: 15
     min_delta: 0.0
-evaluation:
-  metrics: [rmse, mae, accuracy, macro_f1, quadratic_weighted_kappa]

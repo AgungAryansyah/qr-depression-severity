@@ -16,6 +16,5 @@ model:
     hidden_size: 128
     intermediate_size: 512
   interview_encoder:
-    hidden_size: 128
     heads: 2
     feedforward_size: 256

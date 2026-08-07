@@ -11,5 +11,4 @@ model:
     rank: 8
     alpha: 16
     dropout: 0.1
-    pooling: masked_mean
     gradient_checkpointing: true

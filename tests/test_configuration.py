@@ -55,7 +55,6 @@ model: {}
 training:
   {seed: 0, max_epochs: 1, batch_size: 1, gradient_accumulation_steps: 1,
    precision: fp32}
-evaluation: {metrics: [rmse]}
 tracking: {backend: disabled, mode: disabled}
 unknown: true
 """
@@ -74,7 +73,6 @@ model: {adapted_encoder: {name: model, method: frozen, invalid: true}}
 training:
   {seed: 0, max_epochs: 1, batch_size: 1, gradient_accumulation_steps: 1,
    precision: fp32}
-evaluation: {metrics: [rmse]}
 tracking: {backend: disabled, mode: disabled}
 """
     )

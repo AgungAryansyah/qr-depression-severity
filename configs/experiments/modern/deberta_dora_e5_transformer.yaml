@@ -15,13 +15,11 @@ model:
     rank: 8
     alpha: 16
     dropout: 0.1
-    pooling: masked_mean
     gradient_checkpointing: true
   semantic_encoder:
     name: intfloat/e5-base-v2
     revision: f52bf8ec8c7124536f0efb74aca902b2995e5bcd
     frozen: true
-    pooling: masked_mean
     normalize: true
   qr_fusion:
     mode: feature_interaction
@@ -35,7 +33,6 @@ model:
   interview_encoder:
     name: transformer
     layers: 2
-    hidden_size: 256
     heads: 4
     feedforward_size: 512
     dropout: 0.2
