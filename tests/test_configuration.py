@@ -182,6 +182,7 @@ def test_loads_simple_encoder_study() -> None:
         == "e4647970a4c145e8a616c83caeaec8493e8aaf17"
     )
     assert config.model.adapted_encoder.method == "lora"
+    assert not config.model.adapted_encoder.gradient_checkpointing
 
 
 def test_loads_small_core_ablation_study() -> None:

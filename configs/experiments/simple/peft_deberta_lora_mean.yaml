@@ -12,4 +12,4 @@ model:
     alpha: 16
     dropout: 0.1
     pooling: masked_mean
-    gradient_checkpointing: true
+    gradient_checkpointing: false
