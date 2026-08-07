@@ -53,3 +53,31 @@ def test_paired_statistics_excludes_mismatched_participants(tmp_path: Path) -> N
 
     assert result["status"] == "no_aligned_predictions"
     assert result["excluded_seeds"] == {"0": "prediction participant IDs differ"}
+
+
+def test_paired_statistics_aggregates_repeated_participants_across_seeds(
+    tmp_path: Path,
+) -> None:
+    reference = tmp_path / "reference.csv"
+    first_candidate = tmp_path / "candidate-0.csv"
+    second_candidate = tmp_path / "candidate-1.csv"
+    reference.write_text(
+        "participant_id,prediction,target\n1,0,0\n2,0,0\n", encoding="utf-8"
+    )
+    first_candidate.write_text(
+        "participant_id,prediction,target\n1,1,0\n2,3,0\n", encoding="utf-8"
+    )
+    second_candidate.write_text(
+        "participant_id,prediction,target\n1,3,0\n2,1,0\n", encoding="utf-8"
+    )
+
+    result = paired_error_statistics(
+        {0: reference, 1: reference},
+        {0: first_candidate, 1: second_candidate},
+        bootstrap_samples=10,
+        permutation_samples=10,
+        seed=3,
+    )
+
+    assert result["n"] == 2
+    assert result["absolute_error"]["mean_difference"] == 2.0

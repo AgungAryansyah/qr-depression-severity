@@ -13,7 +13,10 @@ def paired_error_statistics(
     permutation_samples: int,
     seed: int,
 ) -> dict[str, object]:
-    differences = {"absolute_error": [], "squared_error": []}
+    differences: dict[str, dict[int, list[float]]] = {
+        "absolute_error": {},
+        "squared_error": {},
+    }
     exclusions: dict[str, str] = {}
     for run_seed in sorted(set(reference_paths) | set(candidate_paths)):
         reference_path = reference_paths.get(run_seed)
@@ -29,7 +32,8 @@ def paired_error_statistics(
             exclusions[str(run_seed)] = str(error)
             continue
         for name, values in differences_for_seed.items():
-            differences[name].extend(values)
+            for participant_id, value in values.items():
+                differences[name].setdefault(participant_id, []).append(value)
     if not differences["absolute_error"]:
         return {"excluded_seeds": exclusions, "status": "no_aligned_predictions"}
     generator = np.random.default_rng(seed)
@@ -42,8 +46,12 @@ def paired_error_statistics(
         "excluded_seeds": exclusions,
     }
     for name, values in differences.items():
+        participant_means = [
+            sum(values[participant_id]) / len(values[participant_id])
+            for participant_id in sorted(values)
+        ]
         result[name] = _difference_statistics(
-            np.asarray(values, dtype=np.float64),
+            np.asarray(participant_means, dtype=np.float64),
             bootstrap_samples,
             permutation_samples,
             generator,
@@ -95,11 +103,11 @@ def _read_predictions(path: Path) -> dict[int, tuple[float, float]]:
 
 def _paired_differences(
     reference: dict[int, tuple[float, float]], candidate: dict[int, tuple[float, float]]
-) -> dict[str, list[float]]:
+) -> dict[str, dict[int, float]]:
     if set(reference) != set(candidate):
         raise ValueError("prediction participant IDs differ")
-    absolute_error = []
-    squared_error = []
+    absolute_error = {}
+    squared_error = {}
     for participant_id in sorted(reference):
         reference_prediction, reference_target = reference[participant_id]
         candidate_prediction, candidate_target = candidate[participant_id]
@@ -107,8 +115,8 @@ def _paired_differences(
             raise ValueError("prediction targets differ")
         reference_error = reference_prediction - reference_target
         candidate_error = candidate_prediction - candidate_target
-        absolute_error.append(abs(candidate_error) - abs(reference_error))
-        squared_error.append(candidate_error**2 - reference_error**2)
+        absolute_error[participant_id] = abs(candidate_error) - abs(reference_error)
+        squared_error[participant_id] = candidate_error**2 - reference_error**2
     return {"absolute_error": absolute_error, "squared_error": squared_error}
 
 

@@ -103,8 +103,9 @@ Screening runs every candidate. The reference and the lowest-development-RMSE
 candidate for each non-reference axis become finalists. Confirmation reruns
 only those finalists, then selects the lowest mean development RMSE; mean MAE
 and candidate ID break ties deterministically. Confirmation exports development
-predictions and computes paired absolute/squared-error statistics, bootstrap
-intervals, sign-flip p-values, and Benjamini-Hochberg correction.
+predictions, averages each participant's paired error difference across seeds,
+then computes participant-level bootstrap intervals, sign-flip p-values, and
+Benjamini-Hochberg correction.
 
 Before the formal study, set the following in both manifests:
 
