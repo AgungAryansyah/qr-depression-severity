@@ -38,21 +38,22 @@ rtk uv run python scripts/run_ablation.py \
 retaining QR input, mean pooling, the linear head, and the simple training
 schedule.
 
-`configs/experiments/simple/peft_deberta_lora_mean.yaml` is the standalone
-LoRA candidate. It uses `microsoft/deberta-v3-base` with rank 8, alpha 16, and
-dropout 0.1; E5 is disabled, and gradient checkpointing is enabled.
+The standalone LoRA candidates use `microsoft/deberta-v3-base` and
+`microsoft/deberta-v3-small`. Both retain rank 8, alpha 16, dropout 0.1,
+disabled E5, and enabled gradient checkpointing so only backbone size changes.
 
-Run its seed-0 training directly with:
+Run the DeBERTa-small seed-0 training directly with:
 
 ```bash
 rtk uv run python scripts/train.py \
-  --config configs/experiments/simple/peft_deberta_lora_mean.yaml
+  --config configs/experiments/simple/peft_deberta_small_lora_mean.yaml
 ```
 
 | Candidate | Axis | Encoder |
 | --- | --- | --- |
 | `frozen-mpnet` | reference | Frozen `all-mpnet-base-v2`. |
 | `lora-deberta` | encoder | LoRA-adapted `microsoft/deberta-v3-base`. |
+| `lora-deberta-small` | encoder | LoRA-adapted `microsoft/deberta-v3-small`. |
 
 Run screening, then confirmation:
 
@@ -64,8 +65,9 @@ rtk uv run python scripts/run_ablation.py \
   --config configs/ablations/simple_encoder.yaml --phase confirm
 ```
 
-Run five fixed seeds on development for the formal study. Select exactly one
-candidate using mean development MAE, then evaluate it once on test. Report
-development mean and standard deviation, test MAE and RMSE, train-development
-gap, trainable parameter count, resolved configuration, and the
-input/preprocessing policy.
+Screening evaluates all three candidates at seed 0. The frozen MPNet reference
+and the lower-MAE DeBERTa candidate proceed to confirmation seeds 0–4. Select
+exactly one candidate using mean development MAE, then evaluate it once on
+test. Report development mean and standard deviation, test MAE and RMSE,
+train-development gap, trainable parameter count, resolved configuration, and
+the input/preprocessing policy.
