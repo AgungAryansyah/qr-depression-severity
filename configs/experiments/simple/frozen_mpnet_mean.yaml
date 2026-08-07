@@ -3,6 +3,8 @@ extends: ../../base.yaml
 experiment:
   name: simple-frozen-mpnet-mean
   tags: [simple, frozen, mpnet, mean-pooling, linear-head]
+tracking:
+  console: false
 model:
   family: simple
   execution:
