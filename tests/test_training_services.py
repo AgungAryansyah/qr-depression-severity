@@ -158,6 +158,19 @@ def test_optimizer_groups_the_simple_head() -> None:
     assert optimizer.param_groups[0]["lr"] == 3.0e-4
 
 
+def test_optimizer_groups_simple_lora_encoder_and_head() -> None:
+    config = load_experiment_config(
+        Path("configs/experiments/simple/frozen_mpnet_mean.yaml")
+    )
+    optimizer = build_optimizer(_SimplePeftModel(), config.training.optimizer)
+
+    assert [group["name"] for group in optimizer.param_groups] == [
+        "adapted_encoder_peft",
+        "heads",
+    ]
+    assert [group["lr"] for group in optimizer.param_groups] == [3.0e-4, 3.0e-4]
+
+
 def test_linear_scheduler_warms_up_then_decays() -> None:
     parameter = nn.Parameter(torch.ones(1))
     optimizer = torch.optim.AdamW([parameter], lr=1.0)
@@ -210,4 +223,12 @@ class _GroupedToyModel(nn.Module):
 class _SimpleHeadModel(nn.Module):
     def __init__(self) -> None:
         super().__init__()
+        self.head = nn.Linear(1, 1)
+
+
+class _SimplePeftModel(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.encoder = nn.Module()
+        self.encoder.model = nn.Linear(1, 1)
         self.head = nn.Linear(1, 1)

@@ -274,13 +274,24 @@ def build_modern_model(config: ExperimentConfig) -> EndToEndModernModel:
 
 def build_simple_model(config: ExperimentConfig) -> SimpleDepressionModel:
     adapted = _required(config.model.adapted_encoder, "adapted_encoder")
-    if adapted.method != "frozen":
-        raise ValueError("Simple model requires a frozen adapted encoder")
-    from transformers import AutoModel
+    if adapted.method == "frozen":
+        from transformers import AutoModel
 
-    encoder = AutoModel.from_pretrained(adapted.name, revision=adapted.revision)
+        encoder = AutoModel.from_pretrained(adapted.name, revision=adapted.revision)
+    elif adapted.method == "lora":
+        encoder = build_deberta_peft(
+            adapted.name,
+            adapted.revision,
+            adapted.method,
+            _required(adapted.rank, "adapted_encoder.rank"),
+            _required(adapted.alpha, "adapted_encoder.alpha"),
+            _required(adapted.dropout, "adapted_encoder.dropout"),
+            adapted.gradient_checkpointing,
+        )
+    else:
+        raise ValueError("Simple model supports frozen or LoRA adapted encoders")
     return SimpleDepressionModel(
-        PooledTokenEncoder(encoder, frozen=True, normalize=False),
+        PooledTokenEncoder(encoder, frozen=adapted.method == "frozen", normalize=False),
         encoder.config.hidden_size,
         config.model.execution.qr_encoder_micro_batch_size,
     )

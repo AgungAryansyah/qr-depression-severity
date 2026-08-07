@@ -99,6 +99,31 @@ def test_simple_model_mean_pools_frozen_qr_embeddings() -> None:
     }
 
 
+def test_build_simple_model_keeps_lora_encoder_trainable(monkeypatch) -> None:
+    encoder = _PeftEncoder()
+    monkeypatch.setattr(factory, "build_deberta_peft", lambda *args: encoder)
+    config = SimpleNamespace(
+        model=SimpleNamespace(
+            adapted_encoder=SimpleNamespace(
+                name="microsoft/deberta-v3-base",
+                revision="pinned-revision",
+                method="lora",
+                rank=8,
+                alpha=16,
+                dropout=0.1,
+                gradient_checkpointing=True,
+            ),
+            execution=SimpleNamespace(qr_encoder_micro_batch_size=4),
+        )
+    )
+
+    model = factory.build_simple_model(config)
+
+    assert model.encoder.model is encoder
+    assert not model.encoder.frozen
+    assert all(parameter.requires_grad for parameter in model.encoder.parameters())
+
+
 def _branch(encoder: nn.Module) -> SeparateQrEncoder:
     return SeparateQrEncoder(
         PooledTokenEncoder(encoder, frozen=False),
@@ -117,3 +142,10 @@ class _ToyEncoder(nn.Module):
         self.batch_sizes.append(input_ids.size(0))
         embeddings = input_ids.unsqueeze(-1).float().repeat(1, 1, 2)
         return type("Output", (), {"last_hidden_state": embeddings})
+
+
+class _PeftEncoder(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.adapter = nn.Linear(2, 2)
+        self.config = SimpleNamespace(hidden_size=2)

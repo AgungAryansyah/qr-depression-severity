@@ -40,7 +40,7 @@ def build_optimizer(
 
 
 def _parameter_group(name: str) -> str:
-    if name.startswith("adapted_encoder.encoder.model"):
+    if name.startswith(("adapted_encoder.encoder.model", "encoder.model")):
         return "adapted_encoder_peft"
     if name.startswith("semantic_encoder"):
         return "semantic_projection"
