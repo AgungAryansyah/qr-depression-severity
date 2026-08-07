@@ -38,6 +38,17 @@ rtk uv run python scripts/run_ablation.py \
 retaining QR input, mean pooling, the linear head, and the simple training
 schedule.
 
+`configs/experiments/simple/peft_deberta_lora_mean.yaml` is the standalone
+LoRA candidate. It uses `microsoft/deberta-v3-base` with rank 8, alpha 16, and
+dropout 0.1; E5 is disabled, and gradient checkpointing is off.
+
+Run its seed-0 training directly with:
+
+```bash
+rtk uv run python scripts/train.py \
+  --config configs/experiments/simple/peft_deberta_lora_mean.yaml
+```
+
 | Candidate | Axis | Encoder |
 | --- | --- | --- |
 | `frozen-mpnet` | reference | Frozen `all-mpnet-base-v2`. |
