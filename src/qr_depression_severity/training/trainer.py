@@ -73,14 +73,13 @@ class Trainer:
                 if training:
                     if accumulated == 0:
                         self.optimizer.zero_grad(set_to_none=True)
-                    scaled_loss = loss / self.gradient_accumulation_steps
                     if self.scaler is None:
-                        scaled_loss.backward()
+                        loss.backward()
                     else:
-                        self.scaler.scale(scaled_loss).backward()
+                        self.scaler.scale(loss).backward()
                     accumulated += 1
                     if accumulated == self.gradient_accumulation_steps:
-                        self._optimizer_step()
+                        self._optimizer_step(accumulated)
                         accumulated = 0
             total_loss += loss.item()
             batch_count += 1
@@ -94,7 +93,7 @@ class Trainer:
                     flush=True,
                 )
         if training and accumulated:
-            self._optimizer_step()
+            self._optimizer_step(accumulated)
         if not batch_count:
             raise ValueError("An epoch requires at least one batch")
         predictions_tensor = torch.cat(predictions)
@@ -105,9 +104,12 @@ class Trainer:
             **ordinal_metrics(predictions_tensor, targets_tensor),
         }
 
-    def _optimizer_step(self) -> None:
+    def _optimizer_step(self, accumulated: int) -> None:
         if self.scaler is not None:
             self.scaler.unscale_(self.optimizer)
+        for parameter in self.model.parameters():
+            if parameter.grad is not None:
+                parameter.grad.div_(accumulated)
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.gradient_clip)
         if self.scaler is None:
             self.optimizer.step()

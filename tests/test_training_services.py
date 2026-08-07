@@ -186,6 +186,29 @@ def test_linear_scheduler_warms_up_then_decays() -> None:
     assert optimizer.param_groups[0]["lr"] == 1.0
 
 
+def test_gradient_accumulation_averages_a_partial_final_step(tmp_path: Path) -> None:
+    model = _ScalarModel()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+    trainer = Trainer(
+        model,
+        optimizer,
+        LocalTracker(tmp_path),
+        "mse",
+        2.0,
+        0.0,
+        100.0,
+        gradient_accumulation_steps=2,
+    )
+    batches = [
+        {"features": torch.ones(1), "target": torch.tensor([target])}
+        for target in (1.0, 3.0, 5.0)
+    ]
+
+    trainer.run_epoch(batches, training=True)
+
+    assert model.weight.item() == pytest.approx(1.32)
+
+
 def test_quadratic_weighted_kappa_for_identical_levels() -> None:
     levels = torch.tensor([0, 1, 2, 3, 4])
 
@@ -202,6 +225,18 @@ class _ToyModel(nn.Module):
         return {
             "prediction": self.prediction(features).squeeze(-1),
             "ordinal_logits": self.ordinal(features),
+        }
+
+
+class _ScalarModel(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.weight = nn.Parameter(torch.tensor(0.0))
+
+    def forward(self, features: torch.Tensor) -> dict[str, torch.Tensor | None]:
+        return {
+            "prediction": self.weight.expand(features.size(0)),
+            "ordinal_logits": None,
         }
 
 
