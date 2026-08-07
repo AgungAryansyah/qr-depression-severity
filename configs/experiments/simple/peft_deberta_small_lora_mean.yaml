@@ -1,0 +1,9 @@
+# Replaces DeBERTa-v3-base with DeBERTa-v3-small while retaining the simple LoRA configuration.
+extends: peft_deberta_lora_mean.yaml
+experiment:
+  name: simple-lora-deberta-small-mean
+  tags: [simple, small, lora, deberta, mean-pooling, linear-head]
+model:
+  adapted_encoder:
+    name: microsoft/deberta-v3-small
+    revision: a36c739020e01763fe789b4b85e2df55d6180012

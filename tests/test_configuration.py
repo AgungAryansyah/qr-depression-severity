@@ -167,22 +167,38 @@ def test_loads_simple_encoder_study() -> None:
     lora_deberta = next(
         candidate for candidate in study.candidates if candidate.id == "lora-deberta"
     )
-    config = load_experiment_config(lora_deberta.config)
+    lora_deberta_small = next(
+        candidate
+        for candidate in study.candidates
+        if candidate.id == "lora-deberta-small"
+    )
+    base_config = load_experiment_config(lora_deberta.config)
+    small_config = load_experiment_config(lora_deberta_small.config)
 
     assert [candidate.id for candidate in study.candidates] == [
         "frozen-mpnet",
         "lora-deberta",
+        "lora-deberta-small",
     ]
     assert study.study.confirmation_seeds == (0, 1, 2, 3, 4)
     assert study.study.selection_metric == "mae"
-    assert config.model.adapted_encoder is not None
-    assert config.model.adapted_encoder.name == "microsoft/deberta-v3-base"
+    assert base_config.model.adapted_encoder is not None
+    assert base_config.model.adapted_encoder.name == "microsoft/deberta-v3-base"
     assert (
-        config.model.adapted_encoder.revision
+        base_config.model.adapted_encoder.revision
         == "e4647970a4c145e8a616c83caeaec8493e8aaf17"
     )
-    assert config.model.adapted_encoder.method == "lora"
-    assert config.model.adapted_encoder.gradient_checkpointing
+    assert small_config.model.adapted_encoder is not None
+    assert small_config.model.adapted_encoder.name == "microsoft/deberta-v3-small"
+    assert (
+        small_config.model.adapted_encoder.revision
+        == "a36c739020e01763fe789b4b85e2df55d6180012"
+    )
+    assert small_config.model.adapted_encoder.method == "lora"
+    assert small_config.model.adapted_encoder.rank == 8
+    assert small_config.model.adapted_encoder.alpha == 16
+    assert small_config.model.adapted_encoder.dropout == 0.1
+    assert small_config.model.adapted_encoder.gradient_checkpointing
 
 
 def test_loads_small_core_ablation_study() -> None:

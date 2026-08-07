@@ -15,3 +15,6 @@ candidates:
   - id: lora-deberta
     axis: encoder
     config: ../experiments/simple/peft_deberta_lora_mean.yaml
+  - id: lora-deberta-small
+    axis: encoder
+    config: ../experiments/simple/peft_deberta_small_lora_mean.yaml

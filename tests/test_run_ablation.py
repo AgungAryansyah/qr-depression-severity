@@ -101,11 +101,14 @@ def test_simple_screening_selects_by_mae(tmp_path: Path) -> None:
             candidate.axis,
             0,
             tmp_path / candidate.id,
-            (
-                {"rmse": 1.0, "mae": 2.0}
-                if candidate.reference
-                else {"rmse": 3.0, "mae": 1.0}
-            ),
+            {
+                "rmse": 1.0,
+                "mae": {
+                    "frozen-mpnet": 2.0,
+                    "lora-deberta": 1.5,
+                    "lora-deberta-small": 1.0,
+                }[candidate.id],
+            },
             {},
         )
         for candidate in study.candidates
@@ -113,7 +116,7 @@ def test_simple_screening_selects_by_mae(tmp_path: Path) -> None:
 
     finalists = ablation_module._select_screen_finalists(study, runs)
 
-    assert finalists == ["frozen-mpnet", "lora-deberta"]
+    assert finalists == ["frozen-mpnet", "lora-deberta-small"]
 
 
 def test_simple_confirmation_selects_by_mean_mae() -> None:
