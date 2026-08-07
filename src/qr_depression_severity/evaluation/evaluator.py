@@ -87,11 +87,15 @@ def _evaluation_tracker(
     try:
         with metadata_path.open(encoding="utf-8") as stream:
             metadata = json.load(stream)
-        run_id = metadata["id"]
-    except (FileNotFoundError, KeyError, TypeError, json.JSONDecodeError) as error:
+    except (FileNotFoundError, json.JSONDecodeError) as error:
         raise ValueError(
             "W&B evaluation requires wandb_run.json from the training run"
         ) from error
+    if not isinstance(metadata, dict):
+        raise ValueError("W&B run metadata must be an object")
+    if metadata.get("backend") == "local":
+        return None
+    run_id = metadata.get("id")
     if metadata.get("backend") != "wandb" or not isinstance(run_id, str) or not run_id:
         raise ValueError("Checkpoint was not produced by a W&B training run")
     tracker = build_tracker(

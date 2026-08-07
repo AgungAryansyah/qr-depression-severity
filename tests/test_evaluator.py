@@ -107,6 +107,16 @@ def test_wandb_evaluator_rejects_checkpoint_without_run_metadata(
         evaluator._evaluation_tracker(_wandb_cpu_config(), checkpoint)
 
 
+def test_wandb_evaluator_accepts_training_fallback_to_local(tmp_path: Path) -> None:
+    checkpoint = tmp_path / "best_checkpoint.pt"
+    (tmp_path / "wandb_run.json").write_text(
+        json.dumps({"backend": "local", "fallback_reason": "RuntimeError"}),
+        encoding="utf-8",
+    )
+
+    assert evaluator._evaluation_tracker(_wandb_cpu_config(), checkpoint) is None
+
+
 def _wandb_cpu_config() -> object:
     base_config = load_experiment_config(
         Path("configs/experiments/modern/deberta_dora_e5_transformer.yaml")
