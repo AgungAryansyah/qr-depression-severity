@@ -209,6 +209,25 @@ def test_gradient_accumulation_averages_a_partial_final_step(tmp_path: Path) -> 
     assert model.weight.item() == pytest.approx(1.32)
 
 
+def test_training_rejects_non_finite_loss(tmp_path: Path) -> None:
+    model = _ScalarModel()
+    model.weight.data.fill_(float("nan"))
+    trainer = Trainer(
+        model,
+        torch.optim.SGD(model.parameters(), lr=0.1),
+        LocalTracker(tmp_path),
+        "mse",
+        2.0,
+        0.0,
+        1.0,
+    )
+
+    with pytest.raises(FloatingPointError, match="Non-finite loss"):
+        trainer.run_epoch(
+            [{"features": torch.ones(1), "target": torch.ones(1)}], training=True
+        )
+
+
 def test_quadratic_weighted_kappa_for_identical_levels() -> None:
     levels = torch.tensor([0, 1, 2, 3, 4])
 

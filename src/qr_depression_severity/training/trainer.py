@@ -70,6 +70,8 @@ class Trainer:
                         self.regression_loss,
                         self.huber_delta,
                     )
+                if not torch.isfinite(loss):
+                    raise FloatingPointError("Non-finite loss encountered")
                 if training:
                     if accumulated == 0:
                         self.optimizer.zero_grad(set_to_none=True)
