@@ -31,36 +31,6 @@ class QrFeatureFusion(nn.Module):
         return self.network(interactions)
 
 
-class QrCrossAttentionFusion(nn.Module):
-    def __init__(
-        self, embedding_size: int, hidden_size: int, heads: int, dropout: float
-    ) -> None:
-        super().__init__()
-        self.attention = nn.MultiheadAttention(
-            embed_dim=embedding_size,
-            num_heads=heads,
-            dropout=dropout,
-            batch_first=True,
-        )
-        self.projection = nn.Linear(embedding_size, hidden_size)
-
-    def forward(
-        self,
-        question_tokens: Tensor,
-        question_mask: Tensor,
-        response_tokens: Tensor,
-        response_mask: Tensor,
-    ) -> Tensor:
-        attended, _ = self.attention(
-            response_tokens,
-            question_tokens,
-            question_tokens,
-            key_padding_mask=~question_mask.bool(),
-            need_weights=False,
-        )
-        return self.projection(masked_mean_pool(attended, response_mask))
-
-
 class BranchFusion(nn.Module):
     def __init__(
         self, hidden_size: int, mode: str, dropout: float, branch_dropout: float
@@ -116,12 +86,6 @@ class BranchFusion(nn.Module):
             torch.where(adapted_dropped, semantic, adapted),
             torch.where(semantic_dropped, adapted, semantic),
         )
-
-
-def gate_statistics(gate: Tensor | None) -> dict[str, float]:
-    if gate is None:
-        return {}
-    return {"mean": gate.mean().item(), "variance": gate.var(unbiased=False).item()}
 
 
 class InterviewTransformer(nn.Module):

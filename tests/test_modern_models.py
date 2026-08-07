@@ -7,15 +7,12 @@ from qr_depression_severity.models.modern import (
     CornHead,
     InterviewTransformer,
     ModernDepressionModel,
-    QrCrossAttentionFusion,
     QrFeatureFusion,
     RegressionHead,
-    gate_statistics,
 )
 from qr_depression_severity.models.peft_encoder import (
     discover_deberta_attention_targets,
     enable_gradient_checkpointing,
-    trainable_parameter_report,
 )
 from qr_depression_severity.models.qr_encoder import (
     PooledTokenEncoder,
@@ -33,17 +30,6 @@ def test_discovers_all_deberta_attention_projection_groups() -> None:
         "encoder.layer.attention.self.value_proj",
         "encoder.layer.attention.output.dense",
     )
-
-
-def test_reports_only_trainable_parameters() -> None:
-    model = nn.Sequential(nn.Linear(2, 2), nn.Linear(2, 1))
-    for parameter in model[0].parameters():
-        parameter.requires_grad_(False)
-
-    report = trainable_parameter_report(model)
-
-    assert report["trainable"] == 3
-    assert report["modules"] == ["1.weight", "1.bias"]
 
 
 def test_enables_gradient_checkpointing_for_adapted_encoder() -> None:
@@ -99,7 +85,6 @@ def test_fusion_modes_and_branch_dropout() -> None:
     assert output.shape == adapted.shape
     assert gate is not None
     assert torch.all((gate >= 0) & (gate <= 1))
-    assert set(gate_statistics(gate)) == {"mean", "variance"}
     dropped_adapted, dropped_semantic = fusion._apply_branch_dropout(adapted, semantic)
     assert torch.all(dropped_adapted > 0)
     assert torch.all(dropped_semantic > 0)
@@ -120,21 +105,6 @@ def test_fusion_only_registers_parameters_for_its_active_mode() -> None:
     assert not any(
         name.startswith("concat") for name, _ in vector_gate.named_parameters()
     )
-
-
-def test_cross_attention_qr_fusion_shape() -> None:
-    fusion = QrCrossAttentionFusion(embedding_size=4, hidden_size=3, heads=2, dropout=0)
-    question = torch.ones(1, 2, 4)
-    response = torch.ones(1, 3, 4)
-
-    output = fusion(
-        question,
-        torch.tensor([[True, True]]),
-        response,
-        torch.tensor([[True, True, False]]),
-    )
-
-    assert output.shape == (1, 3)
 
 
 def test_transformer_padding_invariance_and_max_length() -> None:

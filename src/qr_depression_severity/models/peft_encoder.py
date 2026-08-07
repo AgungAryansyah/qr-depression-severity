@@ -1,7 +1,5 @@
 """DeBERTa PEFT encoder construction."""
 
-from collections.abc import Iterable
-
 from torch import nn
 
 
@@ -75,19 +73,3 @@ def enable_gradient_checkpointing(model: nn.Module) -> None:
     config = getattr(model, "config", None)
     if config is not None and hasattr(config, "use_cache"):
         config.use_cache = False
-
-
-def trainable_parameter_report(model: nn.Module) -> dict[str, object]:
-    named_parameters: Iterable[tuple[str, nn.Parameter]] = model.named_parameters()
-    parameters = list(named_parameters)
-    total = sum(parameter.numel() for _, parameter in parameters)
-    trainable = [
-        (name, parameter) for name, parameter in parameters if parameter.requires_grad
-    ]
-    trainable_count = sum(parameter.numel() for _, parameter in trainable)
-    return {
-        "total": total,
-        "trainable": trainable_count,
-        "percentage": 100 * trainable_count / total if total else 0.0,
-        "modules": [name for name, _ in trainable],
-    }

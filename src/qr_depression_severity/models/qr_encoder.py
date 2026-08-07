@@ -1,7 +1,5 @@
 """Separate question-response encoder branches."""
 
-from typing import Protocol
-
 from torch import Tensor, nn
 from torch.nn import functional
 
@@ -9,27 +7,21 @@ from qr_depression_severity.models.modern import QrFeatureFusion
 from qr_depression_severity.models.pooling import masked_mean_pool
 
 
-class TokenModel(Protocol):
-    def __call__(self, **inputs: Tensor) -> object: ...
-
-
 class PooledTokenEncoder(nn.Module):
-    def __init__(
-        self, model: TokenModel, frozen: bool, normalize: bool = False
-    ) -> None:
+    def __init__(self, model: nn.Module, frozen: bool, normalize: bool = False) -> None:
         super().__init__()
-        self.model = model  # type: ignore[assignment]
+        self.model = model
         self.frozen = frozen
         self.normalize = normalize
         if frozen:
-            for parameter in self.model.parameters():  # type: ignore[attr-defined]
+            for parameter in self.model.parameters():
                 parameter.requires_grad_(False)
-            self.model.eval()  # type: ignore[attr-defined]
+            self.model.eval()
 
     def train(self, mode: bool = True) -> "PooledTokenEncoder":
         super().train(mode)
         if self.frozen:
-            self.model.eval()  # type: ignore[attr-defined]
+            self.model.eval()
         return self
 
     def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
