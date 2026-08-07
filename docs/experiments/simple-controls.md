@@ -40,7 +40,7 @@ schedule.
 
 `configs/experiments/simple/peft_deberta_lora_mean.yaml` is the standalone
 LoRA candidate. It uses `microsoft/deberta-v3-base` with rank 8, alpha 16, and
-dropout 0.1; E5 is disabled, and gradient checkpointing is off.
+dropout 0.1; E5 is disabled, and gradient checkpointing is enabled.
 
 Run its seed-0 training directly with:
 
