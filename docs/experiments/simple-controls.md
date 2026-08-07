@@ -32,6 +32,27 @@ rtk uv run python scripts/run_ablation.py \
   --config configs/ablations/simple_input.yaml --phase confirm
 ```
 
+## Encoder study
+
+`configs/ablations/simple_encoder.yaml` isolates encoder adaptation while
+retaining QR input, mean pooling, the linear head, and the simple training
+schedule.
+
+| Candidate | Axis | Encoder |
+| --- | --- | --- |
+| `frozen-mpnet` | reference | Frozen `all-mpnet-base-v2`. |
+| `lora-deberta` | encoder | LoRA-adapted `microsoft/deberta-v3-base`. |
+
+Run screening, then confirmation:
+
+```bash
+rtk uv run python scripts/run_ablation.py \
+  --config configs/ablations/simple_encoder.yaml --phase screen
+
+rtk uv run python scripts/run_ablation.py \
+  --config configs/ablations/simple_encoder.yaml --phase confirm
+```
+
 Run five fixed seeds on development for the formal study. Select exactly one
 candidate using mean development MAE, then evaluate it once on test. Report
 development mean and standard deviation, test MAE and RMSE, train-development
