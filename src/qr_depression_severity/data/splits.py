@@ -134,8 +134,7 @@ def _read_scores(path: Path) -> dict[int, float]:
             if len(scores) != len(rows):
                 raise ValueError(f"Label file has duplicate participant IDs: {path}")
             if any(
-                not isfinite(score) or not 0 <= score <= 24
-                for score in scores.values()
+                not isfinite(score) or not 0 <= score <= 24 for score in scores.values()
             ):
                 raise ValueError(
                     f"PHQ-8 scores must be finite and between 0 and 24: {path}"

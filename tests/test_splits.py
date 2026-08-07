@@ -104,9 +104,7 @@ def test_validates_private_test_labels_against_official_ids(tmp_path: Path) -> N
 @pytest.mark.parametrize("score", ["nan", "-1", "25"])
 def test_rejects_invalid_phq_scores(tmp_path: Path, score: str) -> None:
     labels = tmp_path / "labels.csv"
-    labels.write_text(
-        f"Participant_ID,PHQ_Score\n300,{score}\n", encoding="utf-8"
-    )
+    labels.write_text(f"Participant_ID,PHQ_Score\n300,{score}\n", encoding="utf-8")
 
     with pytest.raises(ValueError, match="finite and between 0 and 24"):
         _read_scores(labels)
@@ -114,9 +112,7 @@ def test_rejects_invalid_phq_scores(tmp_path: Path, score: str) -> None:
 
 def test_rejects_duplicate_label_participants(tmp_path: Path) -> None:
     labels = tmp_path / "labels.csv"
-    labels.write_text(
-        "Participant_ID,PHQ_Score\n300,1\n300,2\n", encoding="utf-8"
-    )
+    labels.write_text("Participant_ID,PHQ_Score\n300,1\n300,2\n", encoding="utf-8")
 
     with pytest.raises(ValueError, match="duplicate participant IDs"):
         _read_scores(labels)

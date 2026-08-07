@@ -266,9 +266,7 @@ def _select_screen_finalists(
             min(
                 candidates,
                 key=lambda candidate: (
-                    _mean_metric(
-                        candidate.id, runs, study.study.selection_metric
-                    ),
+                    _mean_metric(candidate.id, runs, study.study.selection_metric),
                     candidate.id,
                 ),
             ).id
