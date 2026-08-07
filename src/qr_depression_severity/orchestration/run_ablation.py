@@ -100,7 +100,7 @@ def _confirm(study: AblationStudyConfig) -> AblationPhaseResult:
     )
     prediction_paths = _export_dev_predictions(runs)
     summaries = _candidate_summaries(runs, prediction_paths)
-    winner = _select_confirmed_winner(summaries)
+    winner = _select_confirmed_winner(summaries, study.study.selection_metric)
     comparisons = _paired_statistics(study, summaries)
     summary_path = _study_dir(study) / "confirmation.json"
     _write_json(
@@ -266,7 +266,9 @@ def _select_screen_finalists(
             min(
                 candidates,
                 key=lambda candidate: (
-                    _mean_rmse(candidate.id, runs),
+                    _mean_metric(
+                        candidate.id, runs, study.study.selection_metric
+                    ),
                     candidate.id,
                 ),
             ).id
@@ -374,12 +376,15 @@ def _prediction_paths(summary: dict[str, object]) -> dict[int, Path]:
     return paths
 
 
-def _select_confirmed_winner(summaries: list[dict[str, object]]) -> dict[str, object]:
+def _select_confirmed_winner(
+    summaries: list[dict[str, object]], selection_metric: str
+) -> dict[str, object]:
+    tie_breaker = "mae" if selection_metric == "rmse" else "rmse"
     return min(
         summaries,
         key=lambda summary: (
-            _summary_metric(summary, "rmse"),
-            _summary_metric(summary, "mae"),
+            _summary_metric(summary, selection_metric),
+            _summary_metric(summary, tie_breaker),
             str(summary["candidate_id"]),
         ),
     )
@@ -395,11 +400,13 @@ def _summary_metric(summary: dict[str, object], name: str) -> float:
     return metric["mean"]
 
 
-def _mean_rmse(candidate_id: str, runs: tuple[CandidateRun, ...]) -> float:
+def _mean_metric(
+    candidate_id: str, runs: tuple[CandidateRun, ...], metric: str
+) -> float:
     candidate_runs = [run for run in runs if run.candidate_id == candidate_id]
     if not candidate_runs:
         raise ValueError(f"Screening did not run candidate: {candidate_id}")
-    return mean(run.dev_metrics["rmse"] for run in candidate_runs)
+    return mean(run.dev_metrics[metric] for run in candidate_runs)
 
 
 def _data_warnings(runs: tuple[CandidateRun, ...]) -> list[str]:

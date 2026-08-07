@@ -93,6 +93,52 @@ def test_screening_retains_reference_and_best_candidate_per_axis(
     assert "adapted-lora" in finalists
 
 
+def test_simple_screening_selects_by_mae(tmp_path: Path) -> None:
+    study = load_ablation_study(Path("configs/ablations/simple_encoder.yaml"))
+    runs = tuple(
+        ablation_module.CandidateRun(
+            candidate.id,
+            candidate.axis,
+            0,
+            tmp_path / candidate.id,
+            (
+                {"rmse": 1.0, "mae": 2.0}
+                if candidate.reference
+                else {"rmse": 3.0, "mae": 1.0}
+            ),
+            {},
+        )
+        for candidate in study.candidates
+    )
+
+    finalists = ablation_module._select_screen_finalists(study, runs)
+
+    assert finalists == ["frozen-mpnet", "lora-deberta"]
+
+
+def test_simple_confirmation_selects_by_mean_mae() -> None:
+    summaries = [
+        {
+            "candidate_id": "frozen-mpnet",
+            "development": {
+                "rmse": {"mean": 1.0},
+                "mae": {"mean": 2.0},
+            },
+        },
+        {
+            "candidate_id": "lora-deberta",
+            "development": {
+                "rmse": {"mean": 3.0},
+                "mae": {"mean": 1.0},
+            },
+        },
+    ]
+
+    winner = ablation_module._select_confirmed_winner(summaries, "mae")
+
+    assert winner["candidate_id"] == "lora-deberta"
+
+
 def test_ablation_uses_one_group_with_distinct_candidate_runs() -> None:
     study = load_ablation_study(Path("configs/ablations/core.yaml"))
     reference = next(candidate for candidate in study.candidates if candidate.reference)

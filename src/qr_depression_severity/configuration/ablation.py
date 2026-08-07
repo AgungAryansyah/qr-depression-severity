@@ -1,6 +1,7 @@
 """Validated configuration for a controlled ablation study."""
 
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, model_validator
 
@@ -15,6 +16,7 @@ class AblationStudySettings(StrictModel):
     bootstrap_samples: int = Field(ge=1)
     permutation_samples: int = Field(ge=1)
     significance_seed: int
+    selection_metric: Literal["rmse", "mae"] = "rmse"
 
 
 class AblationCandidate(StrictModel):

@@ -160,6 +160,7 @@ def test_loads_response_only_simple_control_study() -> None:
     config = load_experiment_config(response_only.config)
 
     assert study.study.confirmation_seeds == (0, 1, 2, 3, 4)
+    assert study.study.selection_metric == "mae"
     assert config.data.input_mode == "response_only"
 
 
@@ -175,6 +176,7 @@ def test_loads_simple_encoder_study() -> None:
         "lora-deberta",
     ]
     assert study.study.confirmation_seeds == (0, 1, 2, 3, 4)
+    assert study.study.selection_metric == "mae"
     assert config.model.adapted_encoder is not None
     assert config.model.adapted_encoder.name == "microsoft/deberta-v3-base"
     assert (
